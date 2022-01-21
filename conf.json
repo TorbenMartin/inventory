@@ -1,0 +1,7 @@
+{
+    "User": ["username"],
+    "Password": ["password"],
+    "Server": ["localhost"],
+    "Port": ["3306"],
+    "Db": ["lager"]
+}
