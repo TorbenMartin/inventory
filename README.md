@@ -92,12 +92,12 @@ a small IT inventory management system as a opensource project.
 
 (4) compile:
 
-	- for linux: go build -o lager main.go
-	- for windows: GOOS=windows GOARCH=amd64 go build -o lager.exe main.go
+	- for linux: go build -o lager *.go
+	- for windows: GOOS=windows GOARCH=amd64 go build -o lager.exe *.go
 
 (5) normal run:
 
-	- run source: go run main.go
+	- run source: go run *.go
 	
 	- run binary on linux:
 		chmod +x lager
