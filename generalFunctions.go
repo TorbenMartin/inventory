@@ -4,35 +4,11 @@ import (
 	"crypto/md5"
 	"database/sql"
 	"encoding/hex"
-	"fmt"
 	"math/rand"
-	"net/http"
-	"regexp"
 	"strings"
 	"time"
-	"net"
-
 )
 
-//////////////////logout function//////////////////
-func logoutHandler(w http.ResponseWriter, r *http.Request) {
-
-	ip,_,_ := net.SplitHostPort(r.RemoteAddr)
-	agent := r.Header.Get("User-Agent")
-	t := time.Now()
-	formatted := fmt.Sprintf("%02d.%02d.%d", t.Day(), t.Month(), t.Year())
-	tokena := `l`+md5hash(formatted + " " + ip + " " + agent)+``
-
-         c := http.Cookie{
-                 Name:   tokena,
-                 MaxAge: -1}
-         http.SetCookie(w, &c)
-
-
-	w.Header().Set("Content-Type", "text/html")
-	fmt.Fprintln(w, "<meta http-equiv=\"refresh\" content=\"0; URL=/\">")
-	
-}
 
 //////////////////add item to bestand function//////////////////
 func sqlinsert(gertyp string, modell string, sn string, zinfo string, einkaufsdatum string, userid string) {
@@ -45,13 +21,18 @@ func sqlinsert(gertyp string, modell string, sn string, zinfo string, einkaufsda
 	}
 	defer db.Close()
 
-	insert, err := db.Query("INSERT INTO bestand (gertyp, modell ,seriennummer, zinfo, ausgabename, ausgabedatum, changed, ticketnr,einkaufsdatum) VALUES (\"" + trimHtml(gertyp) + "\",\"" + trimHtml(modell) + "\",\"" + trimHtml(sn) + "\",\"" + trimHtml(zinfo) + "\",\"#LAGER#\",NOW(),\"" + userid + "\",\"#LAGER#\",\"" + trimHtml(newdate) + "\" )")
-
+	insert, err := db.Prepare("INSERT INTO bestand (gertyp, modell ,seriennummer, zinfo, ausgabename, ausgabedatum, changed, ticketnr,einkaufsdatum) VALUES (?,?,?,?,\"#LAGER#\",NOW(),?,\"#LAGER#\",?) ")
 	if err != nil {
 		panic(err.Error())
 	}
 	defer insert.Close()
+	
+	if _, err := insert.Exec(gertyp, modell, sn, zinfo, userid, newdate); err != nil {
+		panic(err.Error())
+	}	
+	
 }
+
 
 //////////////////zinfodatainput function//////////////////
 func zinfodatainput(zinfoid string, bestandid string, daten string) {
@@ -62,14 +43,16 @@ func zinfodatainput(zinfoid string, bestandid string, daten string) {
 	}
 	defer db.Close()
 
-	insert, err := db.Query("INSERT INTO zinfodata (zinfoid, bestandid ,daten) VALUES (\"" + trimHtml(zinfoid) + "\",\"" + trimHtml(bestandid) + "\",\"" + trimHtml(daten) + "\")")
-
+	insert, err := db.Prepare("INSERT INTO zinfodata (zinfoid, bestandid ,daten) VALUES (?,?,?) ")
 	if err != nil {
 		panic(err.Error())
 	}
 	defer insert.Close()
-}
 
+	if _, err := insert.Exec(zinfoid,bestandid,daten); err != nil {
+		panic(err.Error())
+	}
+}
 
 
 //////////////////zinfodataedit function//////////////////
@@ -79,11 +62,15 @@ func zinfodataedit(zinfoid string, bestandid string, daten string) {
 		panic(err.Error())
 	}
 	defer db.Close()
-	edit, err := db.Query("UPDATE zinfodata SET daten=\"" + trimHtml(daten) + "\" where bestandid=\"" + bestandid + "\" and zinfoid=\"" + zinfoid + "\" ")
+	edit, err := db.Prepare("UPDATE zinfodata SET daten= ? where bestandid= ? and zinfoid= ? ")
 	if err != nil {
 		panic(err.Error())
 	}
 	defer edit.Close()
+
+	if _, err := edit.Exec(daten,bestandid,zinfoid); err != nil {
+		panic(err.Error())
+	}
 }
 
 
@@ -96,13 +83,18 @@ func adduser(username string, password string) {
 	}
 	defer db.Close()
 
-	insert, err := db.Query("INSERT INTO login (username, password, rechte, aktiv) VALUES (\"" + trimHtml(username) + "\",\"" + md5hash(password) + "\",0,1)")
+	insert, err := db.Prepare("INSERT INTO login (username, password, rechte, aktiv) VALUES (?,?,0,1) ")
 
 	if err != nil {
 		panic(err.Error())
 	}
 	defer insert.Close()
+
+	if _, err := insert.Exec(username,md5hash(password)); err != nil {
+		panic(err.Error())
+	}
 }
+
 
 //////////////////add modell function//////////////////
 func addmodell(modell string, sperrbestand string) {
@@ -113,12 +105,16 @@ func addmodell(modell string, sperrbestand string) {
 	}
 	defer db.Close()
 
-	insert, err := db.Query("INSERT INTO modell (modell, sperrbestand) VALUES (\"" + trimHtml(modell) + "\",\"" + trimHtml(sperrbestand) + "\")")
+	insert, err := db.Prepare("INSERT INTO modell (modell, sperrbestand) VALUES (?,?) ")
 
 	if err != nil {
 		panic(err.Error())
 	}
 	defer insert.Close()
+
+	if _, err := insert.Exec(modell,sperrbestand); err != nil {
+		panic(err.Error())
+	}
 }
 
 
@@ -131,12 +127,16 @@ func addfield(gertypid string, field string) {
 	}
 	defer db.Close()
 
-	insert, err := db.Query("INSERT INTO zinfo (gertyp, zinfoname) VALUES (\"" + trimHtml(gertypid) + "\",\"" + trimHtml(field) + "\")")
+	insert, err := db.Prepare("INSERT INTO zinfo (gertyp, zinfoname) VALUES (?,?) ")
 
 	if err != nil {
 		panic(err.Error())
 	}
 	defer insert.Close()
+
+	if _, err := insert.Exec(gertypid,field); err != nil {
+		panic(err.Error())
+	}
 }
 
 //////////////////add gertyp function//////////////////
@@ -148,13 +148,18 @@ func addgertyp(gertyp string) {
 	}
 	defer db.Close()
 
-	insert, err := db.Query("INSERT INTO gertyp (gertyp) VALUES (\"" + trimHtml(gertyp) + "\")")
+	insert, err := db.Prepare("INSERT INTO gertyp (gertyp) VALUES (?) ")
 
 	if err != nil {
 		panic(err.Error())
 	}
 	defer insert.Close()
+
+	if _, err := insert.Exec(gertyp); err != nil {
+		panic(err.Error())
+	}
 }
+
 
 //////////////////change modellname and sperrbestand by id function//////////////////
 func editmodell(editmodellid string, addmodellname string, sperrbestand string) {
@@ -165,14 +170,18 @@ func editmodell(editmodellid string, addmodellname string, sperrbestand string) 
 	}
 	defer db.Close()
 
-	change, err := db.Query("UPDATE modell SET modell=\"" + trimHtml(addmodellname) + "\" , sperrbestand=\"" + trimHtml(sperrbestand) + "\" where id=\"" + editmodellid + "\"")
+	change, err := db.Prepare("UPDATE modell SET modell= ? , sperrbestand= ? where id= ? ")
 
 	if err != nil {
 		panic(err.Error())
 	}
-
 	defer change.Close()
+
+	if _, err := change.Exec(addmodellname,sperrbestand,editmodellid); err != nil {
+		panic(err.Error())
+	}
 }
+
 
 //////////////////change gertypname by id function//////////////////
 func editgertyp(editgertypid string, addgertypname string) {
@@ -183,14 +192,18 @@ func editgertyp(editgertypid string, addgertypname string) {
 	}
 	defer db.Close()
 
-	change, err := db.Query("UPDATE gertyp SET gertyp=\"" + trimHtml(addgertypname) + "\" where id=\"" + editgertypid + "\"")
+	change, err := db.Prepare("UPDATE gertyp SET gertyp= ? where id= ? ")
 
 	if err != nil {
 		panic(err.Error())
 	}
-
 	defer change.Close()
+
+	if _, err := change.Exec(addgertypname,editgertypid); err != nil {
+		panic(err.Error())
+	}
 }
+
 
 //////////////////with user permissions change values from bestand by id function//////////////////
 func sqledit2(changeitemid string, gertyp string, ausgegebenan string, ausgegebenam string, ticketnr string, userid string) {
@@ -204,14 +217,18 @@ func sqledit2(changeitemid string, gertyp string, ausgegebenan string, ausgegebe
 	}
 	defer db.Close()
 
-	change, err := db.Query("UPDATE bestand SET gertyp=\"" + trimHtml(gertyp) + "\", ausgabename=\"" + trimHtml(ausgegebenan) + "\" , ausgabedatum=\"" + trimHtml(ausgegebenamb) + "\", changed=\"" + userid + "\", ticketnr=\"" + ticketnr + "\" where id=\"" + changeitemid + "\"")
+	change, err := db.Prepare("UPDATE bestand SET gertyp= ?, ausgabename= ? , ausgabedatum= ?, changed= ?, ticketnr= ? where id= ? ")
 
 	if err != nil {
 		panic(err.Error())
 	}
-
 	defer change.Close()
+
+	if _, err := change.Exec(gertyp,ausgegebenan,ausgegebenamb,userid,ticketnr,changeitemid); err != nil {
+		panic(err.Error())
+	}
 }
+
 
 //////////////////with admin permissions change values from bestand by id function//////////////////
 func sqledit(modell string, changeitemid string, gertyp string, sn string, ausgegebenan string, ausgegebenam string, ticketnr string, einkaufsdatum string, userid string) {
@@ -228,14 +245,18 @@ func sqledit(modell string, changeitemid string, gertyp string, sn string, ausge
 	}
 	defer db.Close()
 
-	change, err := db.Query("UPDATE bestand SET gertyp=\"" + trimHtml(gertyp) + "\", modell=\"" + trimHtml(modell) + "\", seriennummer=\"" + trimHtml(sn) + "\" , ausgabename=\"" + trimHtml(ausgegebenan) + "\" , ausgabedatum=\"" + trimHtml(ausgegebenamb) + "\", changed=\"" + userid + "\", ticketnr=\"" + ticketnr + "\", einkaufsdatum=\"" + einkaufsdatumb + "\" where id=\"" + changeitemid + "\" ")
+	change, err := db.Prepare("UPDATE bestand SET gertyp= ?, modell= ?, seriennummer= ?, ausgabename= ? , ausgabedatum= ?, changed= ?, ticketnr= ?, einkaufsdatum= ? where id= ? ")
 
 	if err != nil {
 		panic(err.Error())
 	}
 	defer change.Close()
 
+	if _, err := change.Exec(gertyp,modell,sn,ausgegebenan,ausgegebenamb,userid,ticketnr,einkaufsdatumb,changeitemid); err != nil {
+		panic(err.Error())
+	}
 }
+
 
 //////////////////change username or password function//////////////////
 func edituser(edituserid string, addusername string, addpassword string) {
@@ -246,21 +267,30 @@ func edituser(edituserid string, addusername string, addpassword string) {
 	}
 	defer db.Close()
 
-	change, err := db.Query("UPDATE login SET username=\"" + trimHtml(addusername) + "\" where id=\"" + edituserid + "\"")
+	change, err := db.Prepare("UPDATE login SET username= ? where id= ? ")
 	if err != nil {
 		panic(err.Error())
 	}
 
 	defer change.Close()
 
+	if _, err := change.Exec(addusername,edituserid); err != nil {
+		panic(err.Error())
+	}
+
 	if addpassword != "" {
-		change, err := db.Query("UPDATE login SET password=\"" + md5hash(addpassword) + "\" where id=\"" + edituserid + "\"")
+		change, err := db.Prepare("UPDATE login SET password= ? where id= ? ")
 
 		if err != nil {
 			panic(err.Error())
 		}
 
 		defer change.Close()
+
+		if _, err := change.Exec(md5hash(addpassword),edituserid); err != nil {
+			panic(err.Error())
+		}
+
 	}
 }
 
@@ -274,16 +304,20 @@ func updatetoken(token string, userid string) {
 	}
 	defer db.Close()
 
-	change, err := db.Query("UPDATE login SET session=\"" + token + "\", sessiontime=NOW() where id=\"" + userid + "\"")
+	change, err := db.Prepare("UPDATE login SET session= ?, sessiontime=NOW() where id= ? ")
 	if err != nil {
 		panic(err.Error())
 	}
 
 	defer change.Close()
+
+	if _, err := change.Exec(token,userid); err != nil {
+		panic(err.Error())
+	}
 }
 
 
-//////////////////update login token function//////////////////
+//////////////////delete admin login token after X minutes function//////////////////
 func deletetoken() {
 
 	db, err := sql.Open("mysql", sqlcred)
@@ -299,6 +333,7 @@ func deletetoken() {
 
 	defer change.Close()
 }
+
 
 //////////////////change user permissions function//////////////////
 func changerechte(changerechteuid string, changerechterid string) {
@@ -319,14 +354,18 @@ func changerechte(changerechteuid string, changerechterid string) {
 		changemsg = "1"
 	}
 
-	change, err := db.Query("UPDATE login SET rechte=\"" + changemsg + "\" where id=\"" + changerechteuid + "\"")
+	change, err := db.Prepare("UPDATE login SET rechte= ? where id= ? ")
 	if err != nil {
 		panic(err.Error())
 	}
 
 	defer change.Close()
 
+	if _, err := change.Exec(changemsg,changerechteuid); err != nil {
+		panic(err.Error())
+	}
 }
+
 
 //////////////////delete item by id function//////////////////
 func delitem(delitemid string) {
@@ -337,18 +376,28 @@ func delitem(delitemid string) {
 	}
 	defer db.Close()
 
-	getback, err := db.Query("DELETE from bestand where id=\"" + delitemid + "\"")
+	getback, err := db.Prepare("DELETE from bestand where id= ? ")
 	if err != nil {
 		panic(err.Error())
 	}
 	defer getback.Close()
+
+	if _, err := getback.Exec(delitemid); err != nil {
+		panic(err.Error())
+	}
 	
-	getbackb, err := db.Query("DELETE from zinfodata where bestandid=\"" + delitemid + "\"")
+	getbackb, err := db.Prepare("DELETE from zinfodata where bestandid= ? ")
 	if err != nil {
 		panic(err.Error())
 	}
 	defer getbackb.Close()		
+
+	if _, err := getbackb.Exec(delitemid); err != nil {
+		panic(err.Error())
+	}
+	
 }
+
 
 //////////////////delete user by id function//////////////////
 func deluser(deluserid string) {
@@ -359,14 +408,19 @@ func deluser(deluserid string) {
 	}
 	defer db.Close()
 
-	getback, err := db.Query("DELETE from login where id=\"" + deluserid + "\"")
+	getback, err := db.Prepare("DELETE from login where id= ? ")
 
 	if err != nil {
 		panic(err.Error())
 	}
 
 	defer getback.Close()
+
+	if _, err := getback.Exec(deluserid); err != nil {
+		panic(err.Error())
+	}
 }
+
 
 //////////////////delete modell by id function//////////////////
 func delmodell(delmodellid string) {
@@ -377,12 +431,17 @@ func delmodell(delmodellid string) {
 	}
 	defer db.Close()
 
-	getback, err := db.Query("DELETE from modell where id=\"" + delmodellid + "\"")
+	getback, err := db.Prepare("DELETE from modell where id= ? ")
 	if err != nil {
 		panic(err.Error())
 	}
 	defer getback.Close()
+
+	if _, err := getback.Exec(delmodellid); err != nil {
+		panic(err.Error())
+	}
 }
+
 
 //////////////////delete gertyp by id function//////////////////
 func delgertyp(delgertypid string) {
@@ -393,12 +452,17 @@ func delgertyp(delgertypid string) {
 	}
 	defer db.Close()
 
-	getback, err := db.Query("DELETE from gertyp where id=\"" + delgertypid + "\"")
+	getback, err := db.Prepare("DELETE from gertyp where id= ? ")
 	if err != nil {
 		panic(err.Error())
 	}
 	defer getback.Close()
+
+	if _, err := getback.Exec(delgertypid); err != nil {
+		panic(err.Error())
+	}
 }
+
 
 //////////////////delete delfield by id function//////////////////
 func delfield(delfieldpid string) {
@@ -409,12 +473,17 @@ func delfield(delfieldpid string) {
 	}
 	defer db.Close()
 
-	getback, err := db.Query("DELETE from zinfo where id=\"" + delfieldpid + "\"")
+	getback, err := db.Prepare("DELETE from zinfo where id= ? ")
 	if err != nil {
 		panic(err.Error())
 	}
 	defer getback.Close()
+
+	if _, err := getback.Exec(delfieldpid); err != nil {
+		panic(err.Error())
+	}
 }
+
 
 //////////////////get model name by id function//////////////////
 func getmodinfo(modell string) string {
@@ -429,12 +498,14 @@ func getmodinfo(modell string) string {
 		modellb string
 	)
 
-	err = db.QueryRow("SELECT modell FROM modell where id = \"" + modell + "\"").Scan(&modellb)
+	err = db.QueryRow("SELECT modell FROM modell where id = ? ", modell).Scan(&modellb)
 	if err != nil {
 		panic(err.Error())
 	}
+
 	return modellb
 }
+
 
 //////////////////get item back by id function//////////////////
 func getback(getbackid string, userid string) {
@@ -445,12 +516,17 @@ func getback(getbackid string, userid string) {
 	}
 	defer db.Close()
 
-	getback, err := db.Query("UPDATE bestand SET ticketnr='#LAGER#', ausgabename='#LAGER#', ausgabedatum=NOW(), changed=\"" + userid + "\" where id=\"" + getbackid + "\"")
+	getback, err := db.Prepare("UPDATE bestand SET ticketnr='#LAGER#', ausgabename='#LAGER#', ausgabedatum=NOW(), changed= ? where id= ? ")
 	if err != nil {
 		panic(err.Error())
 	}
 	defer getback.Close()
+
+	if _, err := getback.Exec(userid,getbackid); err != nil {
+		panic(err.Error())
+	}
 }
+
 
 //////////////////get gertypname by id function//////////////////
 func getgertypinfo(gertyp string) string {
@@ -465,7 +541,7 @@ func getgertypinfo(gertyp string) string {
 		gertypname string
 	)
 
-	err = db.QueryRow("SELECT gertyp FROM gertyp where id = \"" + gertyp + "\"").Scan(&gertypname)
+	err = db.QueryRow("SELECT gertyp FROM gertyp where id = ? ", gertyp).Scan(&gertypname)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -482,7 +558,7 @@ func getuser(getuserid string) string {
 	}
 	defer db.Close()
 
-	err = db.QueryRow("SELECT username FROM login where id = \"" + getuserid + "\"").Scan(&getuserid)
+	err = db.QueryRow("SELECT username FROM login where id = ? ", getuserid).Scan(&getuserid)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -497,6 +573,7 @@ func md5hash(text string) string {
 	return hex.EncodeToString(hasher.Sum(nil))
 }
 
+
 //////////////////random string function//////////////////
 func RandomString(n int) string {
 	rand.Seed(time.Now().UnixNano())
@@ -507,28 +584,4 @@ func RandomString(n int) string {
 		s[i] = letters[rand.Intn(len(letters))]
 	}
 	return string(s)
-}
-
-//////////////////remove bad chars function//////////////////
-func trimHtml(src string) string {
-	//Convert all HTML tags to lowercase
-	re, _ := regexp.Compile("\\<[\\S\\s]+?\\>")
-	src = re.ReplaceAllStringFunc(src, strings.ToLower)
-	//Remove STYLE
-	re, _ = regexp.Compile("\\<style[\\S\\s]+?\\</style\\>")
-	src = re.ReplaceAllString(src, "")
-	//Remove SCRIPT
-	re, _ = regexp.Compile("\\<script[\\S\\s]+?\\</script\\>")
-	src = re.ReplaceAllString(src, "")
-	//Remove all HTML code in angle brackets and replace them with newline characters
-	re, _ = regexp.Compile("\\<[\\S\\s]+?\\>")
-	src = re.ReplaceAllString(src, "\n")
-	//Remove consecutive newlines
-	re, _ = regexp.Compile("\\s{2,}")
-	src = re.ReplaceAllString(src, "\n")
-	//remove all other bads
-	re, _ = regexp.Compile("[''(){}<> /%[\\]]")
-	src = re.ReplaceAllString(src, "")
-	return strings.TrimSpace(src)
-	
 }

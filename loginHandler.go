@@ -30,7 +30,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 				rechte1  int
 				aktiv    int
 			)
-			err = db.QueryRow("SELECT id, username, password, rechte, aktiv FROM login where username = \""+r.FormValue("username")+"\"").Scan(&id, &username, &password, &rechte1, &aktiv)
+			err = db.QueryRow("SELECT id, username, password, rechte, aktiv FROM login where username = ? ", r.FormValue("username")).Scan(&id, &username, &password, &rechte1, &aktiv)
 			if err != nil {
 				w.Header().Set("Content-Type", "text/html")
 				fmt.Fprintln(w, "<meta http-equiv=\"refresh\" content=\"0; URL=/\">")

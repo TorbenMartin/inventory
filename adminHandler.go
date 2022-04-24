@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -35,9 +34,8 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
 			r.ParseForm()
 
-
 			if (r.FormValue("addfield") == "hinzufügen" && r.FormValue("field") != "" && r.FormValue("gertypid") != "") {
-				err = db.QueryRow("SELECT gertyp FROM zinfo where zinfoname = \"" + r.FormValue("field") + "\" and zinfoname = \"" + r.FormValue("gertypid") + "\" ").Scan(&gertypcheck)
+				err = db.QueryRow("SELECT gertyp FROM zinfo where zinfoname = ? and zinfoname = ? ", r.FormValue("field"), r.FormValue("gertypid")).Scan(&gertypcheck)
 				if err != nil {
 					//panic(err.Error())
 				}
@@ -53,7 +51,7 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 					delfieldcount int
 				)
 
-				err = db.QueryRow("SELECT COUNT(*) FROM zinfodata where zinfoid = \"" + r.FormValue("delfieldpid") + "\" ").Scan(&delfieldcount)
+				err = db.QueryRow("SELECT COUNT(*) FROM zinfodata where zinfoid = ? ", r.FormValue("delfieldpid")).Scan(&delfieldcount)
 				if err != nil {
 					//panic(err.Error())
 				}
@@ -70,28 +68,13 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 					delfield(r.FormValue("delfieldpid"))
 				}
 
-
-
-
-
-
-
-
-					
-
 			}
-
-
-
-
-
-
 
 			if r.FormValue("adduser") == "Benutzer hinzufügen" && r.FormValue("addusername") != "" && r.FormValue("addpassword") != "" {
 				
 				
 				
-				err = db.QueryRow("SELECT username FROM login where username = \"" + r.FormValue("addusername") + "\" ").Scan(&ucheck)
+				err = db.QueryRow("SELECT username FROM login where username = ? ", r.FormValue("addusername")).Scan(&ucheck)
 				if err != nil {
 					//panic(err.Error())
 				}
@@ -106,12 +89,11 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if r.FormValue("edituser") == "Speichern" && r.FormValue("edituserid") != "" {
-			log.Printf(r.FormValue("edituserid"))
 				edituser(r.FormValue("edituserid"), r.FormValue("addusername"), r.FormValue("addpassword"))
 			}
 
 			if r.FormValue("addmodell") == "Modell hinzufügen" && r.FormValue("addmodellname") != "" && r.FormValue("sperrbestand") != "" {
-				err = db.QueryRow("SELECT modell FROM modell where modell = \"" + r.FormValue("addmodellname") + "\" ").Scan(&mcheck)
+				err = db.QueryRow("SELECT modell FROM modell where modell = ? ", r.FormValue("addmodellname")).Scan(&mcheck)
 				if err != nil {
 					//panic(err.Error())
 				}
@@ -127,7 +109,7 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 					delmodellcount int
 				)
 
-				err = db.QueryRow("SELECT COUNT(*) FROM bestand where modell = \"" + r.FormValue("delmodellid") + "\" ").Scan(&delmodellcount)
+				err = db.QueryRow("SELECT COUNT(*) FROM bestand where modell = ? ", r.FormValue("delmodellid")).Scan(&delmodellcount)
 				if err != nil {
 					//panic(err.Error())
 				}
@@ -145,7 +127,7 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if r.FormValue("addgertyp") == "Gerätetyp hinzufügen" && r.FormValue("addgertypname") != "" {
-				err = db.QueryRow("SELECT gertyp FROM bestand where gertyp = \"" + r.FormValue("addgertypname") + "\" ").Scan(&gcheck)
+				err = db.QueryRow("SELECT gertyp FROM bestand where gertyp = ? ", r.FormValue("addgertypname")).Scan(&gcheck)
 				if err != nil {
 					//panic(err.Error())
 				}
@@ -161,7 +143,7 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 					delgertypcount int
 				)
 
-				err = db.QueryRow("SELECT COUNT(*) FROM zinfo where gertyp = \"" + r.FormValue("delgertypid") + "\" ").Scan(&delgertypcount)
+				err = db.QueryRow("SELECT COUNT(*) FROM zinfo where gertyp = ? ", r.FormValue("delgertypid")).Scan(&delgertypcount)
 				if err != nil {
 					//panic(err.Error())
 				}
@@ -607,8 +589,8 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 		//list gertype end
 		
 		//list zinfo start
-		fmt.Fprintln(w, `<hr><br><br>`)
-		fmt.Fprintln(w, `<center><p id="sitefield">Felder hinzufügen</p><table border="0" width="700"><tr>`)
+		fmt.Fprintln(w, `<br><br>`)
+
 
 		rows5, err := db.Query("SELECT id, gertyp FROM gertyp")
 		if err != nil {
@@ -627,7 +609,7 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 
 
 		//dynamic fields start
-		rows6, err := db.Query("SELECT id, zinfoname FROM zinfo where gertyp=\"" + gertypid + "\"")
+		rows6, err := db.Query("SELECT id, zinfoname FROM zinfo where gertyp= ? ", gertypid)
 		if err != nil {
 			panic(err.Error())
 		}

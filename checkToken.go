@@ -36,7 +36,7 @@ func checktoken(w http.ResponseWriter, r *http.Request) string{
 			panic(err.Error())
 		}
 		defer db.Close()    	
-         	err = db.QueryRow("SELECT id,rechte,username,password FROM login where id = \"" + splitsting[0] + "\"").Scan(&id,&rechte,&username,&password)
+         	err = db.QueryRow("SELECT id,rechte,username,password FROM login where id = ?", splitsting[0]).Scan(&id,&rechte,&username,&password)
 		if err != nil {
 			panic(err.Error())
 		}
@@ -68,8 +68,5 @@ return ``+id+`_`+rechte+``
 } else {
 return `0_0`
 }
-
-
-
 
 }      

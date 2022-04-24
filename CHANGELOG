@@ -1,0 +1,16 @@
+CHANGELOG:
+
+Lagerverwaltung_1.0.3
+	- create CHANGELOG
+	- Implement SQL XSS Protection
+	- Seperate logoutHandler.go
+	- Fix Bugs on Search
+	
+Lagerverwaltung_1.0.2
+	- change README File
+	
+Lagerverwaltung_1.0.1
+	- Seperate main.go in many GoFiles.
+	
+Lagerverwaltung_1.0.0
+	- add Project

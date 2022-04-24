@@ -40,16 +40,14 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 				)
 
 
-				err = db.QueryRow("SELECT COUNT(*) FROM bestand where seriennummer = \"" + r.FormValue("sn") + "\" ").Scan(&sncount)
+				err = db.QueryRow("SELECT COUNT(*) FROM bestand where seriennummer = ? ", r.FormValue("sn")).Scan(&sncount)
 				if err != nil {
 				}
-
 
 				if (sncount == 0) {
 					sqlinsert(r.URL.Query().Get("gertyp"), r.FormValue("modell"), r.FormValue("sn"), r.URL.Query().Get("gertyp"), r.FormValue("einkaufsdatum"), checktokenstring[0])
 
-
-					err = db.QueryRow("SELECT id FROM bestand where gertyp=\""+r.URL.Query().Get("gertyp")+"\" and seriennummer = \"" + r.FormValue("sn") + "\" ").Scan(&bestandid)
+					err = db.QueryRow("SELECT id FROM bestand where gertyp= ? and seriennummer = ? ", r.URL.Query().Get("gertyp"), r.FormValue("sn")).Scan(&bestandid)
 					if err != nil {
 					}
 					
@@ -85,26 +83,21 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 
 			if checktokenstring[1] == "1" {
 				if (r.FormValue("additem") == "Speichern" && r.FormValue("sn") != "" && r.FormValue("changeitemid") != "" && r.FormValue("ausgegebenan") != "" && r.FormValue("ausgegebenam") != "" && r.FormValue("ticketnr") != "" && r.FormValue("einkaufsdatum")!="" && r.FormValue("modell") != "") {
-					sqledit(r.FormValue("modell"), r.FormValue("changeitemid"), r.URL.Query().Get("gertyp"), r.FormValue("sn"), r.FormValue("ausgegebenan"), r.FormValue("ausgegebenam"), r.FormValue("ticketnr"), r.FormValue("einkaufsdatum"),checktokenstring[0])
-				
-				
+					sqledit(r.FormValue("modell"), r.FormValue("changeitemid"), r.URL.Query().Get("gertyp"), r.FormValue("sn"), r.FormValue("ausgegebenan"), r.FormValue("ausgegebenam"), r.FormValue("ticketnr"), r.FormValue("einkaufsdatum"),checktokenstring[0])	
 				
 					var (
 					zinfoid    string
 					bestandid    string
 				)
 			
-				
-				
-				
-					err = db.QueryRow("SELECT id FROM bestand where seriennummer = \"" + r.FormValue("sn") + "\" ").Scan(&bestandid)
+					err = db.QueryRow("SELECT id FROM bestand where seriennummer = ? ", r.FormValue("sn")).Scan(&bestandid)
 					if err != nil {
 					}
 					
 					//loadzinfo1 start					
 					if (bestandid != "") {
 					
-						rows9, err := db.Query("SELECT id FROM zinfo where gertyp=\"" + r.URL.Query().Get("gertyp") + "\" ")
+						rows9, err := db.Query("SELECT id FROM zinfo where gertyp= ? ", r.URL.Query().Get("gertyp"))
 						if err != nil {
 							log.Fatal(err)
 						}
@@ -230,7 +223,7 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 
 	
 
-			err = db.QueryRow("SELECT COUNT(*) FROM gertyp where id = \"" + r.URL.Query().Get("gertyp") + "\" ").Scan(&gertypcount)
+			err = db.QueryRow("SELECT COUNT(*) FROM gertyp where id = ? ", r.URL.Query().Get("gertyp")).Scan(&gertypcount)
 			if err != nil {
 			}
 
@@ -415,7 +408,7 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 			
 			<select onChange="window.open(this.value, '_self')">
 				<option value =""></option>
-				<option value ="./user?gertyp=`+r.URL.Query().Get("gertyp")+`&rows=&site=">*</option> 
+				<option value="./user?gertyp=`+r.URL.Query().Get("gertyp")+`&rows=&site=">*</option> 
 				<option value="./user?gertyp=`+r.URL.Query().Get("gertyp")+`&rows=10&site=`+r.URL.Query().Get("site")+`">10</option>
 				<option value="./user?gertyp=`+r.URL.Query().Get("gertyp")+`&rows=30&site=`+r.URL.Query().Get("site")+`">30</option>
 				<option value="./user?gertyp=`+r.URL.Query().Get("gertyp")+`&rows=50&site=`+r.URL.Query().Get("site")+`">50</option>
@@ -433,10 +426,7 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 
 				mid := r.URL.Query().Get("gertyp")
 				if len(mid) > 0 {
-
-					
-
-					
+				
 		fmt.Fprintln(w, `					
 		<center>
 
@@ -449,7 +439,7 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 					
 					
 					//loadzinfo start
-					rows8, err := db.Query("SELECT id, zinfoname FROM zinfo where gertyp= \"" + r.URL.Query().Get("gertyp") + "\" ")
+					rows8, err := db.Query("SELECT id, zinfoname FROM zinfo where gertyp= ? ", r.URL.Query().Get("gertyp"))
 					if err != nil {
 						log.Fatal(err)
 					}
@@ -490,24 +480,24 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 
 					//search start output
 					
-					if r.FormValue("searchitem") == "suchen" && trimHtml(r.FormValue("search")) != "" {
+					if r.FormValue("searchitem") == "suchen" && r.FormValue("search") != "" {
 					
 					var searchcount int
 					mid := r.URL.Query().Get("gertyp")
-					err = db.QueryRow("SELECT COUNT(*) FROM zinfo where gertyp = \"" + mid + "\" ").Scan(&searchcount)
+					err = db.QueryRow("SELECT COUNT(*) FROM zinfo where gertyp = ? ", mid).Scan(&searchcount)
 					
 					if (searchcount > 0) {
 
-					search := trimHtml(r.FormValue("search"))
-										
+					search := r.FormValue("search")
+									
 					sqlq := `SELECT DISTINCT bestand.id, bestand.gertyp, bestand.modell, bestand.seriennummer, bestand.zinfo, bestand.ausgabename, bestand.ausgabedatum, bestand.changed, bestand.ticketnr, bestand.einkaufsdatum
 						FROM bestand 
 						JOIN zinfo ON bestand.gertyp
 						JOIN zinfodata ON bestand.id
 						where zinfodata.bestandid = bestand.id and bestand.gertyp = `+mid+` and (zinfodata.daten like '%`+search+`%' or bestand.seriennummer like '%`+search+`%' or bestand.ausgabename like '%`+search+`%' or bestand.ausgabedatum like '%`+search+`%' or bestand.ticketnr like '%`+search+`%' or bestand.einkaufsdatum like '%`+search+`%') ;`
-
+	
 						rows3, err := db.Query(sqlq)
-						
+									
 						if err != nil {
 							log.Fatal(err)
 						}
@@ -528,16 +518,37 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 ///zinfo table start
 
 
-
+					var changezinfo []string
+					var vorhanden int = 0
+					var sstring string
 		//loadzinfo start
 		for index := range zinfoarray {
 		daten=""						
-		err = db.QueryRow("SELECT daten FROM zinfodata where bestandid = \"" + id + "\" and zinfoid = \"" + zinfoarray[index] + "\" ").Scan(&daten)
+		err = db.QueryRow("SELECT daten FROM zinfodata where bestandid = ? and zinfoid = ? ", id, zinfoarray[index]).Scan(&daten)
 		if err != nil {
 		}
 								
 			if (daten !="") {
 				fmt.Fprintln(w, `<td valign="top" align="center">`+ daten +`</td>`)
+
+						changezinfo = append(changezinfo, `,'`+daten+`'`)
+									
+									for indexb := range changeheader {
+									
+										sstring = `,zinfo`+zinfoarray[index]+``									
+																
+										if (sstring == changeheader[indexb]) {									
+											vorhanden = 1										
+										}
+									
+									}	
+									
+									if (vorhanden == 0 ){
+										changeheader = append(changeheader, `,zinfo`+zinfoarray[index]+``)
+										changeheaderb = append(changeheaderb, `zinfo`+zinfoarray[index]+``)
+									} 
+									vorhanden = 0
+
 			} else {
 				fmt.Fprintln(w, `<td valign="top" align="center"></td>`)
 			}
@@ -556,8 +567,7 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 							fmt.Fprintln(w, `
 		<td valign="top" align="center">`+einkaufsdatumb+`</td>`)
 
-if ( ausgabename == "#LAGER#" && ticketnr == "#LAGER#") {
-	
+if ( ausgabename == "#LAGER#" && ticketnr == "#LAGER#") {	
 		fmt.Fprintln(w, `<td valign="top" align="center">`+ausgabename+`</td>`)
 		fmt.Fprintln(w, `<td valign="top" align="center"></td>`)
 	
@@ -585,7 +595,7 @@ if ( ausgabename != "#LAGER#" && ticketnr != "#LAGER#") {
 		<td valign="top" align="center" width="183">
   
 		<div style="float: left; width: 60px;">
-			<button onclick="changeitem('`+id+`','`+modell+`','`+seriennummer+`','`+zinfo+`','`+ausgabename+`','`+ausgabedatumb+`','`+changed+`','`+ticketnr+`')">ändern</button>
+			<button onclick="changeitem('`+id+`','`+modell+`','`+seriennummer+`','`+zinfo+`','`+ausgabename+`','`+ausgabedatumb+`','`+changed+`','`+ticketnr+`','`+einkaufsdatumb+`'`+strings.Join(changezinfo, "")+`)">ändern</button>
 		</div>
 		<div style="float: left; width: 60px; ">
 			<form action="/user?gertyp=`+r.URL.Query().Get("gertyp")+`" method="post">
@@ -615,8 +625,10 @@ if ( ausgabename != "#LAGER#" && ticketnr != "#LAGER#") {
 	
 						} else {
 
-					search := trimHtml(r.FormValue("search"))
-					
+
+		
+					search := r.FormValue("search")
+
 					sqlq := `SELECT DISTINCT bestand.id, bestand.gertyp, bestand.modell, bestand.seriennummer, bestand.zinfo, bestand.ausgabename, bestand.ausgabedatum, bestand.changed, bestand.ticketnr, bestand.einkaufsdatum
 						FROM bestand 
 						JOIN zinfo ON bestand.gertyp
@@ -644,15 +656,38 @@ if ( ausgabename != "#LAGER#" && ticketnr != "#LAGER#") {
 
 ///zinfo table start
 
+
+
+					var changezinfo []string
+					var vorhanden int = 0
+					var sstring string
 		//loadzinfo start
 		for index := range zinfoarray {
 		daten=""						
-		err = db.QueryRow("SELECT daten FROM zinfodata where bestandid = \"" + id + "\" and zinfoid = \"" + zinfoarray[index] + "\" ").Scan(&daten)
+		err = db.QueryRow("SELECT daten FROM zinfodata where bestandid = ? and zinfoid = ? ", id, zinfoarray[index]).Scan(&daten)
 		if err != nil {
 		}
 								
 			if (daten !="") {
 				fmt.Fprintln(w, `<td valign="top" align="center">`+ daten +`</td>`)
+
+								changezinfo = append(changezinfo, `,'`+daten+`'`)
+									
+									for indexb := range changeheader {
+									
+										sstring = `,zinfo`+zinfoarray[index]+``									
+																
+										if (sstring == changeheader[indexb]) {									
+											vorhanden = 1										
+										}
+									
+									}	
+									
+									if (vorhanden == 0 ){
+										changeheader = append(changeheader, `,zinfo`+zinfoarray[index]+``)
+										changeheaderb = append(changeheaderb, `zinfo`+zinfoarray[index]+``)
+									} 
+									vorhanden = 0
 			} else {
 				fmt.Fprintln(w, `<td valign="top" align="center"></td>`)
 			}
@@ -703,7 +738,7 @@ if ( ausgabename != "#LAGER#" && ticketnr != "#LAGER#") {
 		<td valign="top" align="center" width="183">
   
 		<div style="float: left; width: 60px;">
-			<button onclick="changeitem('`+id+`','`+modell+`','`+seriennummer+`','`+zinfo+`','`+ausgabename+`','`+ausgabedatumb+`','`+changed+`','`+ticketnr+`')">ändern</button>
+			<button onclick="changeitem('`+id+`','`+modell+`','`+seriennummer+`','`+zinfo+`','`+ausgabename+`','`+ausgabedatumb+`','`+changed+`','`+ticketnr+`','`+einkaufsdatumb+`'`+strings.Join(changezinfo, "")+`)">ändern</button>
 		</div>
 		<div style="float: left; width: 60px; ">
 			<form action="/user?gertyp=`+r.URL.Query().Get("gertyp")+`" method="post">
@@ -740,7 +775,7 @@ if ( ausgabename != "#LAGER#" && ticketnr != "#LAGER#") {
 
 
 						
-						rows3, err := db.Query("SELECT id, gertyp, modell, seriennummer, zinfo, ausgabename, ausgabedatum, changed, ticketnr, einkaufsdatum FROM bestand where gertyp = \"" + mid + "\" ")
+						rows3, err := db.Query("SELECT id, gertyp, modell, seriennummer, zinfo, ausgabename, ausgabedatum, changed, ticketnr, einkaufsdatum FROM bestand where gertyp = ? ", mid)
 						if err != nil {
 							log.Fatal(err)
 						}
@@ -763,7 +798,7 @@ if ( ausgabename != "#LAGER#" && ticketnr != "#LAGER#") {
 					//loadzinfo start
 							for index := range zinfoarray {
 								daten=""
-								err = db.QueryRow("SELECT daten FROM zinfodata where bestandid = \"" + id + "\" and zinfoid = \"" + zinfoarray[index] + "\" ").Scan(&daten)
+								err = db.QueryRow("SELECT daten FROM zinfodata where bestandid = ? and zinfoid = ? ", id, zinfoarray[index]).Scan(&daten)
 								if err != nil {
 								}
 								
@@ -1108,11 +1143,11 @@ Timer(180);
 
 			/////////
 
-			err = db.QueryRow("SELECT COUNT(*) FROM bestand where gertyp = \"" + id1 + "\" ").Scan(&counta)
+			err = db.QueryRow("SELECT COUNT(*) FROM bestand where gertyp = ? ", id1).Scan(&counta)
 			if err != nil {
 			}
 
-			err = db.QueryRow("SELECT COUNT(*) FROM bestand where gertyp = \"" + id1 + "\" and ausgabename =\"#LAGER#\" ").Scan(&countb)
+			err = db.QueryRow("SELECT COUNT(*) FROM bestand where gertyp = ? and ausgabename =\"#LAGER#\" ", id1).Scan(&countb)
 			if err != nil {
 			}
 
@@ -1178,11 +1213,11 @@ Timer(180);
 
 			/////////
 
-			err = db.QueryRow("SELECT COUNT(*) FROM bestand where modell = \"" + id2 + "\" ").Scan(&countges)
+			err = db.QueryRow("SELECT COUNT(*) FROM bestand where modell = ? ", id2).Scan(&countges)
 			if err != nil {
 			}
 
-			err = db.QueryRow("SELECT COUNT(*) FROM bestand where modell = \"" + id2 + "\" and ausgabename =\"#LAGER#\" ").Scan(&counta2)
+			err = db.QueryRow("SELECT COUNT(*) FROM bestand where modell = ? and ausgabename =\"#LAGER#\" ", id2).Scan(&counta2)
 			if err != nil {
 			}
 
@@ -1194,7 +1229,7 @@ Timer(180);
 			if (sperrbestand > 0 && countges > 0 && counta2 > 0) {
 				if count2 <= sperrbestand {
 
-					err = db.QueryRow("SELECT gertyp FROM bestand where modell = \"" + id2 + "\" and ausgabename =\"#LAGER#\" limit 1 ").Scan(&gertyp)
+					err = db.QueryRow("SELECT gertyp FROM bestand where modell = ? and ausgabename =\"#LAGER#\" limit 1 ", id2).Scan(&gertyp)
 					if err != nil {
 					}
 

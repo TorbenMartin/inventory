@@ -1,6 +1,6 @@
 {
-    "User": ["username"],
-    "Password": ["password"],
+    "User": ["lager"],
+    "Password": ["p@ssw0rd"],
     "Server": ["localhost"],
     "Port": ["3306"],
     "Db": ["lager"]
