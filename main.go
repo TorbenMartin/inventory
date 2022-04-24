@@ -17,7 +17,8 @@ func main() {
 	http.HandleFunc("/admin", adminHandler)
 	http.Handle("/img/", http.StripPrefix("/img", http.FileServer(http.Dir("./img"))))
 
-	err := http.ListenAndServe(":50000", nil)
+	//err := http.ListenAndServe(":50000", nil)
+	err := http.ListenAndServeTLS(":50000", "certs/server.crt", "certs/server.key", nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}

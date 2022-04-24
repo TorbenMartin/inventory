@@ -1,5 +1,8 @@
 CHANGELOG:
 
+Lagerverwaltung_1.0.4
+	- implement ssl
+
 Lagerverwaltung_1.0.3
 	- create CHANGELOG
 	- Implement SQL XSS Protection
