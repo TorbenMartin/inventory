@@ -2,6 +2,8 @@ package main
 
 import (
 	"net/http"
+	"os"
+	"log"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -15,22 +17,25 @@ const key string = "q-BkdGka2YpGd2,eBb=-Ab5?qhd:M-7'"
 //////////////////main process function//////////////////
 func main() {
 
-	http.HandleFunc("/", loginHandler)
-	http.HandleFunc("/logout", logoutHandler)
-	http.HandleFunc("/user", userHandler)
-	http.HandleFunc("/admin", adminHandler)
-	http.Handle("/img/", http.StripPrefix("/img", http.FileServer(http.Dir("./img"))))
-
-	//err := http.ListenAndServe(":50000", nil)
-	err := http.ListenAndServeTLS(":50000", "certs/cert.pem", "certs/privkey.pem", nil)
+	fileName := "requests.log"
+	logFile, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
 	}
 
-	
+	defer logFile.Close()
+	log.SetOutput(logFile)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", loginHandler)
+	mux.HandleFunc("/logout", logoutHandler)
+	mux.HandleFunc("/user", userHandler)
+	mux.HandleFunc("/admin", adminHandler)
+	mux.Handle("/img/", http.StripPrefix("/img", http.FileServer(http.Dir("./img"))))
+
+	http.ListenAndServeTLS(":50000", "certs/cert.pem", "certs/privkey.pem", RequestLogger(mux))
 
 }
-
 
 func secheader(w http.ResponseWriter) {
 
@@ -42,4 +47,21 @@ func secheader(w http.ResponseWriter) {
 	w.Header().Set("strict-transport-security", "max-age=31536000; includeSubDomains")
 	w.Header().Set("x-frame-options", "sameorigin")
 
+}
+
+func RequestLogger(targetMux http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		targetMux.ServeHTTP(w, r)
+
+		// log request by who(IP address)
+		requesterIP := r.RemoteAddr
+
+		log.Printf(
+			"%s\t\t%s\t\t%s\t",
+			r.Method,
+			requesterIP,
+			r.RequestURI,
+		)
+	})
 }

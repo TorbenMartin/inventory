@@ -247,7 +247,7 @@ func editgertyp(editgertypid string, addgertypname string) {
 
 
 //////////////////with user permissions change values from bestand by id function//////////////////
-func sqledit2(changeitemid string, gertyp string, ausgegebenan string, ausgegebenam string, ticketnr string, userid string, modell string) {
+func sqledit2(changeitemid string, gertyp string, ausgegebenan string, ausgegebenam string, ticketnr string, userid string) {
 
 	split := strings.Split(ausgegebenam, ".")
 	ausgegebenamb := ``+split[2]+`-`+split[1]+`-`+split[0]+``
@@ -258,14 +258,14 @@ func sqledit2(changeitemid string, gertyp string, ausgegebenan string, ausgegebe
 	}
 	defer db.Close()
 
-	change, err := db.Prepare("UPDATE bestand SET gertyp= ?, modell= ?, ausgabename= ? , ausgabedatum= ?, changed= ?, ticketnr= ? where id= ? ")
+	change, err := db.Prepare("UPDATE bestand SET gertyp= ?, ausgabename= ? , ausgabedatum= ?, changed= ?, ticketnr= ? where id= ? ")
 
 	if err != nil {
 		panic(err.Error())
 	}
 	defer change.Close()
 
-	if _, err := change.Exec(gertyp,modell,ausgegebenan,ausgegebenamb,userid,ticketnr,changeitemid); err != nil {
+	if _, err := change.Exec(gertyp,ausgegebenan,ausgegebenamb,userid,ticketnr,changeitemid); err != nil {
 		panic(err.Error())
 	}
 

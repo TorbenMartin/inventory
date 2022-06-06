@@ -1,5 +1,9 @@
 CHANGELOG:
 
+Lagerverwaltung_1.0.7
+	- Fix Bugs in Edit Form
+	- Apply Logs
+
 Lagerverwaltung_1.0.6
 	- Fix Bugs in Edit Form
 	- Apply Secure HTTP Headers

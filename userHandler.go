@@ -124,8 +124,8 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 		
 				}
 			} else {
-				if (r.FormValue("additem") == "Speichern" && r.FormValue("changeitemid") != "" && r.FormValue("ausgegebenan") != "" && r.FormValue("ausgegebenam") != "" && r.FormValue("ticketnr") != ""  && r.FormValue("modell") != "") {
-					sqledit2(r.FormValue("changeitemid"), r.URL.Query().Get("gertyp"), r.FormValue("ausgegebenan"), r.FormValue("ausgegebenam"), r.FormValue("ticketnr"),checktokenstring[0],r.FormValue("modell"))
+				if (r.FormValue("additem") == "Speichern" && r.FormValue("changeitemid") != "" && r.FormValue("ausgegebenan") != "" && r.FormValue("ausgegebenam") != "" && r.FormValue("ticketnr") != "") {
+					sqledit2(r.FormValue("changeitemid"), r.URL.Query().Get("gertyp"), r.FormValue("ausgegebenan"), r.FormValue("ausgegebenam"), r.FormValue("ticketnr"),checktokenstring[0])
 				}
 			}
 
@@ -958,7 +958,6 @@ const sortColumn = function(index) {
 `)
 
 
-
 fmt.Fprintln(w, `
 
 //<![CDATA[
@@ -990,7 +989,6 @@ fmt.Fprintln(w, `
 
 `)
 
-
 fmt.Fprintln(w, `
 function cancel(){
 document.getElementById('changeitemid').value = "";
@@ -1012,18 +1010,20 @@ document.getElementById('ausgegebenam').disabled = !this.checked;
 document.getElementById('ticketnr').disabled = !this.checked;
 document.getElementById('addmen').open = false;
 }
-`)
 
-fmt.Fprintln(w, `
+
+
 function changeitem(id,modellid,seriennummer,zinfo,ausgegebenan,ausgegebenam,changed,ticketnr,einkaufsdatum`+strings.Join(changeheader, "")+`){
 document.getElementById('modell').namedItem('modellid' + modellid).selected=true;
 document.getElementById('changeitemid').value = id;
 document.getElementById('einkaufsdatum').value = einkaufsdatum;
 document.getElementById('sn').value = seriennummer;
 `)
+
 for indexb := range changeheaderb {
 fmt.Fprintln(w, `document.getElementById('`+changeheaderb[indexb]+`').value = `+changeheaderb[indexb]+`;`)																							
 }
+
 
 fmt.Fprintln(w, `
 document.getElementById('ticketnr').value = ticketnr;
@@ -1038,25 +1038,17 @@ document.getElementById('addmen').open = true;
 `)
 
 
-
-				if checktokenstring[1] == "1" {
+				if checktokenstring[1] != "1" {
 					fmt.Fprintln(w, `
-document.getElementById('sn').disabled = this.checked;													
-document.getElementById('zinfo').disabled = this.checked;							
-document.getElementById('modell').disabled = this.checked;
-document.getElementById('einkaufsdatum').disabled = this.checked;
-`)
-				} else {
-					fmt.Fprintln(w, `
-document.getElementById('sn').disabled = !this.checked;													
-document.getElementById('zinfo').disabled = !this.checked;							
 document.getElementById('modell').disabled = !this.checked;
-document.getElementById('einkaufsdatum').disabled = !this.checked;	
+document.getElementById('sn').disabled = !this.checked;													
+document.getElementById('einkaufsdatum').disabled = !this.checked;
 `)
-
-fmt.Fprintln(w, `}`)
 				}
 
+
+
+fmt.Fprintln(w, `}`)
 
 				fmt.Fprintln(w, `
 </script>
