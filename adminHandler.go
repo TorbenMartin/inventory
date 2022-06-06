@@ -7,10 +7,14 @@ import (
 	"strconv"
 	"strings"
 	"html"
+	"net"
+	"time"
 )
 
 //////////////////admin site function//////////////////
 func adminHandler(w http.ResponseWriter, r *http.Request) {
+
+	secheader(w)
 	w.Header().Set("Content-Type", "text/html")
 
 	deletetoken()
@@ -86,7 +90,27 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if r.FormValue("deluser") == "löschen" && r.FormValue("deluserid") != "" {
-				deluser(r.FormValue("deluserid"))
+
+				ip,_,_ := net.SplitHostPort(r.RemoteAddr)
+				agent := r.Header.Get("User-Agent")
+				t := time.Now()
+				formatted := fmt.Sprintf("%02d.%02d.%d", t.Day(), t.Month(), t.Year())
+				tokena := `l`+md5hash(formatted + " " + ip + " " + agent)+``
+
+		      		c, err := r.Cookie(tokena)
+				if err != nil {
+					//panic(err.Error())
+				} else {
+
+				value := c.Value
+				splitsting := strings.Split(value, "_")  
+
+				if r.FormValue("deluserid") != splitsting[0] {					
+					deluser(r.FormValue("deluserid"))	
+				}
+
+				}
+				
 			}
 
 			if r.FormValue("edituser") == "Speichern" && r.FormValue("edituserid") != "" {
@@ -181,7 +205,29 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if r.FormValue("changerechte") != "" && r.FormValue("changerechteuid") != "" && r.FormValue("changerechterid") != "" {
-				changerechte(r.FormValue("changerechteuid"), r.FormValue("changerechterid"))
+
+				ip,_,_ := net.SplitHostPort(r.RemoteAddr)
+				agent := r.Header.Get("User-Agent")
+				t := time.Now()
+				formatted := fmt.Sprintf("%02d.%02d.%d", t.Day(), t.Month(), t.Year())
+				tokena := `l`+md5hash(formatted + " " + ip + " " + agent)+``
+
+		      		c, err := r.Cookie(tokena)
+				if err != nil {
+					//panic(err.Error())
+				} else {
+
+				value := c.Value
+				splitsting := strings.Split(value, "_")  
+
+				if r.FormValue("changerechteuid") != splitsting[0] {					
+					changerechte(r.FormValue("changerechteuid"), r.FormValue("changerechterid"))
+				}
+
+				}
+
+
+
 			}
 
 			if r.FormValue("editmodell") == "Speichern" && r.FormValue("editmodellid") != "" && r.FormValue("addmodellname") != "" && r.FormValue("sperrbestand") != "" && r.FormValue("gertypaddmodell") != "" {

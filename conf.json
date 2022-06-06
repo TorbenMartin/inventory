@@ -1,8 +1,8 @@
 {
     "User": ["lager"],
-    "Password": ["gOznhmPDS98="],
+    "Password": ["p@ssw0rd"],
     "Server": ["localhost"],
     "Port": ["3306"],
     "Db": ["lager"],
-    "Init": ["0"]
+    "Init": ["1"]
 }

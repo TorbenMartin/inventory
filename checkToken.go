@@ -67,6 +67,7 @@ func checktoken(w http.ResponseWriter, r *http.Request) string{
 		)
       		c, err := r.Cookie(tokena)
         	if err != nil {
+        		//panic(err.Error())
         	} else {
 
          	value := c.Value

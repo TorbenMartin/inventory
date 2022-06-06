@@ -12,7 +12,8 @@ import (
 
 //////////////////login function//////////////////
 func loginHandler(w http.ResponseWriter, r *http.Request) {
-
+	
+	secheader(w)
 	if r.Method == "POST" {
 		r.ParseForm()
 
@@ -35,10 +36,8 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("Content-Type", "text/html")
 				fmt.Fprintln(w, "<meta http-equiv=\"refresh\" content=\"0; URL=/\">")
 			}
-
 			if ((r.FormValue("username") == username) && (md5hash(``+r.FormValue("password")+``+keysalt+``) == password)) {
 				
-
 				ip,_,_ := net.SplitHostPort(r.RemoteAddr)
 				agent := r.Header.Get("User-Agent")
 				t := time.Now()
@@ -64,11 +63,9 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 				
 				w.Header().Set("Content-Type", "text/html")
 				fmt.Fprintln(w, "<meta http-equiv=\"refresh\" content=\"0; URL=/user\">")				
-				
 					
 			}
 		}
-
 	}
 	w.Header().Set("Content-Type", "text/html")
 

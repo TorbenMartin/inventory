@@ -15,8 +15,6 @@ const key string = "q-BkdGka2YpGd2,eBb=-Ab5?qhd:M-7'"
 //////////////////main process function//////////////////
 func main() {
 
-	
-
 	http.HandleFunc("/", loginHandler)
 	http.HandleFunc("/logout", logoutHandler)
 	http.HandleFunc("/user", userHandler)
@@ -24,7 +22,7 @@ func main() {
 	http.Handle("/img/", http.StripPrefix("/img", http.FileServer(http.Dir("./img"))))
 
 	//err := http.ListenAndServe(":50000", nil)
-	err := http.ListenAndServeTLS(":50000", "certs/server.crt", "certs/server.key", nil)
+	err := http.ListenAndServeTLS(":50000", "certs/cert.pem", "certs/privkey.pem", nil)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -33,3 +31,15 @@ func main() {
 
 }
 
+
+func secheader(w http.ResponseWriter) {
+
+	w.Header().Set("X-XSS-Protection", "1; mode=block")
+	w.Header().Set("cache-control", "private, max-age=0")
+	w.Header().Set("bfcache-opt-in", "unload")
+	w.Header().Set("server", "gws")
+	w.Header().Set("expires", "-1")
+	w.Header().Set("strict-transport-security", "max-age=31536000; includeSubDomains")
+	w.Header().Set("x-frame-options", "sameorigin")
+
+}
