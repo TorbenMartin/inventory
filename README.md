@@ -23,72 +23,17 @@ a small IT inventory management system as a opensource project.
 	}
 
 
-(3) create and install on mysql database:
+(3) create and install mysql database:
 
-	create database lager;
-	use lager;
+	Restore the SQL Backup:
 
-	CREATE TABLE bestand (
-		id int NOT NULL AUTO_INCREMENT,
-		gertyp varchar(255) NOT NULL,
-		modell varchar(255) NOT NULL,
-		seriennummer varchar(255) NOT NULL,
-		zinfo varchar(255),
-		ticketnr varchar(255),
-		ausgabename varchar(255),
-		ausgabedatum date,
-		changed int,
-		einkaufsdatum date,
-		PRIMARY KEY (id)
-	);
+		mysql -u root -p
+		source lager.sql;
+			
+	Backup created by:
 
+		mysqldump -u root -p -x -B lager > lager.sql
 
-	CREATE TABLE zinfodata (
-		id int NOT NULL AUTO_INCREMENT,
-		zinfoid varchar(255) NOT NULL,
-		bestandid varchar(255) NOT NULL,
-		daten varchar(255) NOT NULL,
-		PRIMARY KEY (id)
-	);
-
-
-	CREATE TABLE modell (
-		id int NOT NULL AUTO_INCREMENT,
-		modell varchar(255) NOT NULL,
-		sperrbestand varchar(255),
-		sort varchar(255),
-		PRIMARY KEY (id)
-	);
-
-	CREATE TABLE zinfo (
-		id int NOT NULL AUTO_INCREMENT,
-		gertyp varchar(255) NOT NULL,
-		zinfoname varchar(255) NOT NULL,
-		sort varchar(255),
-		PRIMARY KEY (id)
-	);
-
-	CREATE TABLE gertyp (
-		id int NOT NULL AUTO_INCREMENT,
-		gertyp varchar(255) NOT NULL,
-		sort varchar(255),
-		PRIMARY KEY (id)
-	);
-
-
-	CREATE TABLE login (
-		id int NOT NULL AUTO_INCREMENT,
-		username varchar(255) NOT NULL,
-		password varchar(255) NOT NULL,
-		rechte int,
-		aktiv int NOT NULL,
-		session varchar(255),
-		sessiontime timestamp,
-		PRIMARY KEY (id)
-	);
-
-
-	INSERT INTO login (username, password, rechte, aktiv) VALUES ("admin","21232f297a57a5a743894a0e4a801fc3","1","1");
 
 (4) compile:
 

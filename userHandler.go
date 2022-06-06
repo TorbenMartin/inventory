@@ -8,12 +8,14 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"html"
 )
 
 
 //////////////////user site function//////////////////
 func userHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
+
 
 	deletetoken()
 
@@ -132,7 +134,7 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 
 			if checktokenstring[1] == "1" {
 				if r.FormValue("additem") == "löschen" && r.FormValue("delitemid") != "" {
-					delitem(r.FormValue("delitemid"))
+						delitem(r.FormValue("delitemid"))		
 				}
 			}
 
@@ -199,7 +201,7 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if id != "" && gertyp != "" {
-				fmt.Fprintln(w, `<li><a href="/user?gertyp=`+id+`">`+gertyp+`</a></li>`)
+				fmt.Fprintln(w, `<li><a href="/user?gertyp=`+id+`">`+html.EscapeString(gertyp)+`</a></li>`)
 			}
 		}
 		err = rows.Err()
@@ -219,9 +221,6 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 		///content start
 
 		if len(r.URL.Query().Get("gertyp")) > 0 {
-
-
-	
 
 			err = db.QueryRow("SELECT COUNT(*) FROM gertyp where id = ? ", r.URL.Query().Get("gertyp")).Scan(&gertypcount)
 			if err != nil {
@@ -272,7 +271,7 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 						<select required name="modell" id="modell" width="180" style="width: 180px">
 			`)
 
-				rows2, err := db.Query("SELECT id, modell FROM modell")
+				rows2, err := db.Query("SELECT id, modell FROM modell where gertyp= "+r.URL.Query().Get("gertyp")+" ")
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -391,11 +390,8 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 					
 					if (siteb < 0) {
 					siteb = 1
-					}
-
-					
+					}		
 			}
-
 
 			siteaa = strconv.Itoa(sitea) 
 			sitebb = strconv.Itoa(siteb) 
@@ -408,7 +404,7 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 			
 			<select onChange="window.open(this.value, '_self')">
 				<option value =""></option>
-				<option value="./user?gertyp=`+r.URL.Query().Get("gertyp")+`&rows=&site=">*</option> 
+				<option value="./user?gertyp=`+r.URL.Query().Get("gertyp")+`&rows=*&site=`+r.URL.Query().Get("site")+`">*</option>
 				<option value="./user?gertyp=`+r.URL.Query().Get("gertyp")+`&rows=10&site=`+r.URL.Query().Get("site")+`">10</option>
 				<option value="./user?gertyp=`+r.URL.Query().Get("gertyp")+`&rows=30&site=`+r.URL.Query().Get("site")+`">30</option>
 				<option value="./user?gertyp=`+r.URL.Query().Get("gertyp")+`&rows=50&site=`+r.URL.Query().Get("site")+`">50</option>
@@ -434,7 +430,7 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 			<thead>
 
 				<tr>	
-					<th valign="top" align="center" data-type="string" width="100"> `+getgertypinfo(r.URL.Query().Get("gertyp"))+`: </th>
+					<th valign="top" align="center" data-type="string" width="100"> `+html.EscapeString(getgertypinfo(r.URL.Query().Get("gertyp")))+`: </th>
 					<th valign="top" align="center" data-type="number" width="140"> Seriennummer: </th>`)
 					
 					
@@ -495,7 +491,7 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 						JOIN zinfo ON bestand.gertyp
 						JOIN zinfodata ON bestand.id
 						where zinfodata.bestandid = bestand.id and bestand.gertyp = `+mid+` and (zinfodata.daten like '%`+search+`%' or bestand.seriennummer like '%`+search+`%' or bestand.ausgabename like '%`+search+`%' or bestand.ausgabedatum like '%`+search+`%' or bestand.ticketnr like '%`+search+`%' or bestand.einkaufsdatum like '%`+search+`%') ;`
-	
+					//fmt.Println(sqlq)
 						rows3, err := db.Query(sqlq)
 									
 						if err != nil {
@@ -510,8 +506,8 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 
 							fmt.Fprintln(w, `
 	<tr>
-		<td valign="top" align="center">`+getmodinfo(modell)+`</td>
-		<td valign="top" align="center">`+seriennummer+`</td>
+		<td valign="top" align="center">`+html.EscapeString(getmodinfo(modell))+`</td>
+		<td valign="top" align="center">`+html.EscapeString(seriennummer)+`</td>
 
 	`)
 
@@ -565,33 +561,33 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 
 ///zinfo table end
 							fmt.Fprintln(w, `
-		<td valign="top" align="center">`+einkaufsdatumb+`</td>`)
+		<td valign="top" align="center">`+html.EscapeString(einkaufsdatumb)+`</td>`)
 
 if ( ausgabename == "#LAGER#" && ticketnr == "#LAGER#") {	
-		fmt.Fprintln(w, `<td valign="top" align="center">`+ausgabename+`</td>`)
+		fmt.Fprintln(w, `<td valign="top" align="center">`+html.EscapeString(ausgabename)+`</td>`)
 		fmt.Fprintln(w, `<td valign="top" align="center"></td>`)
 	
 } else {
 
 if ( ausgabename != "#LAGER#" && ticketnr == "#LAGER#") {
-		fmt.Fprintln(w, `<td valign="top" align="center">`+ausgabename+`</td>`)
+		fmt.Fprintln(w, `<td valign="top" align="center">`+html.EscapeString(ausgabename)+`</td>`)
 		fmt.Fprintln(w, `<td valign="top" align="center"></td>`)
 }
 
 if ( ausgabename == "#LAGER#" && ticketnr != "#LAGER#") {
 		fmt.Fprintln(w, `<td valign="top" align="center"></td>`)
-		fmt.Fprintln(w, `<td valign="top" align="center">`+ticketnr+`</td>`)
+		fmt.Fprintln(w, `<td valign="top" align="center">`+html.EscapeString(ticketnr)+`</td>`)
 }
 
 
 if ( ausgabename != "#LAGER#" && ticketnr != "#LAGER#") {
-		fmt.Fprintln(w, `<td valign="top" align="center">`+ausgabename+`</td>`)
-		fmt.Fprintln(w, `<td valign="top" align="center">`+ticketnr+`</td>`)
+		fmt.Fprintln(w, `<td valign="top" align="center">`+html.EscapeString(ausgabename)+`</td>`)
+		fmt.Fprintln(w, `<td valign="top" align="center">`+html.EscapeString(ticketnr)+`</td>`)
 }
 
 }		
 		fmt.Fprintln(w, `
-		<td valign="top" title="`+getuser(changed)+`" align="center">`+ausgabedatumb+`</td>
+		<td valign="top" title="`+getuser(changed)+`" align="center">`+html.EscapeString(ausgabedatumb)+`</td>
 		<td valign="top" align="center" width="183">
   
 		<div style="float: left; width: 60px;">
@@ -607,7 +603,7 @@ if ( ausgabename != "#LAGER#" && ticketnr != "#LAGER#") {
 							if checktokenstring[1] == "1" {
 								fmt.Fprintln(w, `
 		<div style="float: left; width: 60px; ">
-			<form action="/user?gertyp=`+r.URL.Query().Get("gertyp")+`" method="post">
+			<form action="/user?gertyp=`+r.URL.Query().Get("gertyp")+`" method="post" onSubmit="return confirm('Soll der Eintrag gelöscht werden?');">
 				<input type="hidden" name="delitemid" value="`+id+`">
 				<input type="submit" name="additem" id="delitem" value="löschen" style="background-color: red">
 			</form> 
@@ -624,17 +620,13 @@ if ( ausgabename != "#LAGER#" && ticketnr != "#LAGER#") {
 						}
 	
 						} else {
-
-
 		
 					search := r.FormValue("search")
 
-					sqlq := `SELECT DISTINCT bestand.id, bestand.gertyp, bestand.modell, bestand.seriennummer, bestand.zinfo, bestand.ausgabename, bestand.ausgabedatum, bestand.changed, bestand.ticketnr, bestand.einkaufsdatum
-						FROM bestand 
-						JOIN zinfo ON bestand.gertyp
-						JOIN zinfodata ON bestand.id
-						where bestand.gertyp = `+mid+` and (zinfodata.daten like '%`+search+`%' or bestand.seriennummer like '%`+search+`%' or bestand.ausgabename like '%`+search+`%' or bestand.ausgabedatum like '%`+search+`%' or bestand.ticketnr like '%`+search+`%' or bestand.einkaufsdatum like '%`+search+`%') ;`
-
+					sqlq := `SELECT DISTINCT bestand.id, bestand.gertyp, bestand.modell, bestand.seriennummer, bestand.ausgabename, bestand.ausgabedatum, bestand.changed, bestand.ticketnr, bestand.einkaufsdatum
+						FROM bestand
+						where bestand.gertyp = `+mid+` and (bestand.seriennummer like '%`+search+`%' or bestand.ausgabename like '%`+search+`%' or bestand.ausgabedatum like '%`+search+`%' or bestand.ticketnr like '%`+search+`%' or bestand.einkaufsdatum like '%`+search+`%') ;`
+					//fmt.Println(sqlq)
 						rows3, err := db.Query(sqlq)
 						
 						if err != nil {
@@ -642,59 +634,17 @@ if ( ausgabename != "#LAGER#" && ticketnr != "#LAGER#") {
 						}
 
 						for rows3.Next() {
-							err := rows3.Scan(&id, &gertyp, &modell, &seriennummer, &zinfo, &ausgabename, &ausgabedatum, &changed, &ticketnr, &einkaufsdatum)
+							err := rows3.Scan(&id, &gertyp, &modell, &seriennummer, &ausgabename, &ausgabedatum, &changed, &ticketnr, &einkaufsdatum)
 							if err != nil {
 								log.Fatal(err)
 							}
 
 							fmt.Fprintln(w, `
 	<tr>
-		<td valign="top" align="center">`+getmodinfo(modell)+`</td>
-		<td valign="top" align="center">`+seriennummer+`</td>
+		<td valign="top" align="center">`+html.EscapeString(getmodinfo(modell))+`</td>
+		<td valign="top" align="center">`+html.EscapeString(seriennummer)+`</td>
 
 	`)
-
-///zinfo table start
-
-
-
-					var changezinfo []string
-					var vorhanden int = 0
-					var sstring string
-		//loadzinfo start
-		for index := range zinfoarray {
-		daten=""						
-		err = db.QueryRow("SELECT daten FROM zinfodata where bestandid = ? and zinfoid = ? ", id, zinfoarray[index]).Scan(&daten)
-		if err != nil {
-		}
-								
-			if (daten !="") {
-				fmt.Fprintln(w, `<td valign="top" align="center">`+ daten +`</td>`)
-
-								changezinfo = append(changezinfo, `,'`+daten+`'`)
-									
-									for indexb := range changeheader {
-									
-										sstring = `,zinfo`+zinfoarray[index]+``									
-																
-										if (sstring == changeheader[indexb]) {									
-											vorhanden = 1										
-										}
-									
-									}	
-									
-									if (vorhanden == 0 ){
-										changeheader = append(changeheader, `,zinfo`+zinfoarray[index]+``)
-										changeheaderb = append(changeheaderb, `zinfo`+zinfoarray[index]+``)
-									} 
-									vorhanden = 0
-			} else {
-				fmt.Fprintln(w, `<td valign="top" align="center"></td>`)
-			}
-		}
-									
-		//loadzinfo end
-
 
 	split := strings.Split(einkaufsdatum, "-")
 	einkaufsdatumb := ``+split[2]+`.`+split[1]+`.`+split[0]+``
@@ -702,43 +652,41 @@ if ( ausgabename != "#LAGER#" && ticketnr != "#LAGER#") {
 	splitb := strings.Split(ausgabedatum, "-")
 	ausgabedatumb := ``+splitb[2]+`.`+splitb[1]+`.`+splitb[0]+``
 
-///zinfo table end
+
 							fmt.Fprintln(w, `
-		<td valign="top" align="center">`+einkaufsdatumb+`</td>`)
+		<td valign="top" align="center">`+html.EscapeString(einkaufsdatumb)+`</td>`)
 
 if ( ausgabename == "#LAGER#" && ticketnr == "#LAGER#") {
 	
-		fmt.Fprintln(w, `<td valign="top" align="center">`+ausgabename+`</td>`)
+		fmt.Fprintln(w, `<td valign="top" align="center">`+html.EscapeString(ausgabename)+`</td>`)
 		fmt.Fprintln(w, `<td valign="top" align="center"></td>`)
 	
 } else {
 
 if ( ausgabename != "#LAGER#" && ticketnr == "#LAGER#") {
-		fmt.Fprintln(w, `<td valign="top" align="center">`+ausgabename+`</td>`)
+		fmt.Fprintln(w, `<td valign="top" align="center">`+html.EscapeString(ausgabename)+`</td>`)
 		fmt.Fprintln(w, `<td valign="top" align="center"></td>`)
 }
 
 if ( ausgabename == "#LAGER#" && ticketnr != "#LAGER#") {
 		fmt.Fprintln(w, `<td valign="top" align="center"></td>`)
-		fmt.Fprintln(w, `<td valign="top" align="center">`+ticketnr+`</td>`)
+		fmt.Fprintln(w, `<td valign="top" align="center">`+html.EscapeString(ticketnr)+`</td>`)
 }
 
 
 if ( ausgabename != "#LAGER#" && ticketnr != "#LAGER#") {
-		fmt.Fprintln(w, `<td valign="top" align="center">`+ausgabename+`</td>`)
-		fmt.Fprintln(w, `<td valign="top" align="center">`+ticketnr+`</td>`)
+		fmt.Fprintln(w, `<td valign="top" align="center">`+html.EscapeString(ausgabename)+`</td>`)
+		fmt.Fprintln(w, `<td valign="top" align="center">`+html.EscapeString(ticketnr)+`</td>`)
 }
 
 }
-
-
 		
 		fmt.Fprintln(w, `
-		<td valign="top" title="`+getuser(changed)+`" align="center">`+ausgabedatumb+`</td>
+		<td valign="top" title="`+getuser(changed)+`" align="center">`+html.EscapeString(ausgabedatumb)+`</td>
 		<td valign="top" align="center" width="183">
   
 		<div style="float: left; width: 60px;">
-			<button onclick="changeitem('`+id+`','`+modell+`','`+seriennummer+`','`+zinfo+`','`+ausgabename+`','`+ausgabedatumb+`','`+changed+`','`+ticketnr+`','`+einkaufsdatumb+`'`+strings.Join(changezinfo, "")+`)">ändern</button>
+			<button onclick="changeitem('`+id+`','`+modell+`','`+seriennummer+`','`+zinfo+`','`+ausgabename+`','`+ausgabedatumb+`','`+changed+`','`+ticketnr+`','`+einkaufsdatumb+`')">ändern</button>
 		</div>
 		<div style="float: left; width: 60px; ">
 			<form action="/user?gertyp=`+r.URL.Query().Get("gertyp")+`" method="post">
@@ -750,7 +698,7 @@ if ( ausgabename != "#LAGER#" && ticketnr != "#LAGER#") {
 							if checktokenstring[1] == "1" {
 								fmt.Fprintln(w, `
 		<div style="float: left; width: 60px; ">
-			<form action="/user?gertyp=`+r.URL.Query().Get("gertyp")+`" method="post">
+			<form action="/user?gertyp=`+r.URL.Query().Get("gertyp")+`" method="post" onSubmit="return confirm('Soll der Eintrag gelöscht werden?');">
 				<input type="hidden" name="delitemid" value="`+id+`">
 				<input type="submit" name="additem" id="delitem" value="löschen" style="background-color: red">
 			</form> 
@@ -771,11 +719,45 @@ if ( ausgabename != "#LAGER#" && ticketnr != "#LAGER#") {
 						//search end output
 										
 					} else {
+		
+						var (
+						limita int
+						limitb int
+						limitc int	
+						limitd string
+						perpagea int
+						perpageb string												
+						)
 						
+						perpagea, _ = strconv.Atoi(r.URL.Query().Get("rows"))
+
+						if (perpagea > 0) {
+						perpageb = strconv.Itoa(perpagea)						
+						} else {
+						perpageb = strconv.Itoa(10)
+						}
+
+						limita, _ = strconv.Atoi(r.URL.Query().Get("site"))
+						limitb, _ = strconv.Atoi(perpageb)
+						limitc = limita * limitb
+						limitd = strconv.Itoa(limitc)
 
 
+						if r.URL.Query().Get("rows") == "*" {
 						
-						rows3, err := db.Query("SELECT id, gertyp, modell, seriennummer, zinfo, ausgabename, ausgabedatum, changed, ticketnr, einkaufsdatum FROM bestand where gertyp = ? ", mid)
+						var bestandcount int
+						
+						err = db.QueryRow("SELECT COUNT(*) FROM bestand where gertyp = ? ", r.URL.Query().Get("gertyp")).Scan(&bestandcount)
+						if err != nil {
+							panic(err.Error())
+						}
+
+						limitd = strconv.Itoa(0)
+						perpageb = strconv.Itoa(bestandcount)
+						}
+
+
+						rows3, err := db.Query("SELECT id, gertyp, modell, seriennummer, zinfo, ausgabename, ausgabedatum, changed, ticketnr, einkaufsdatum FROM bestand where gertyp = ? LIMIT ?,? ", mid, limitd, perpageb)
 						if err != nil {
 							log.Fatal(err)
 						}
@@ -788,8 +770,8 @@ if ( ausgabename != "#LAGER#" && ticketnr != "#LAGER#") {
 
 							fmt.Fprintln(w, `
 <tr>
-<td valign="top" align="center">`+getmodinfo(modell)+`</td>
-<td valign="top" align="center">`+seriennummer+`</td>
+<td valign="top" align="center">`+html.EscapeString(getmodinfo(modell))+`</td>
+<td valign="top" align="center">`+html.EscapeString(seriennummer)+`</td>
 `)
 
 					var changezinfo []string
@@ -839,30 +821,30 @@ if ( ausgabename != "#LAGER#" && ticketnr != "#LAGER#") {
 	ausgabedatumb := ``+splitb[2]+`.`+splitb[1]+`.`+splitb[0]+``
 
 							fmt.Fprintln(w, `
-<td valign="top" align="center">`+einkaufsdatumb+`</td>`)
+<td valign="top" align="center">`+html.EscapeString(einkaufsdatumb)+`</td>`)
 
 
 if ( ausgabename == "#LAGER#" && ticketnr == "#LAGER#") {
 	
-		fmt.Fprintln(w, `<td valign="top" align="center">`+ausgabename+`</td>`)
+		fmt.Fprintln(w, `<td valign="top" align="center">`+html.EscapeString(ausgabename)+`</td>`)
 		fmt.Fprintln(w, `<td valign="top" align="center"></td>`)
 	
 } else {
 
 if ( ausgabename != "#LAGER#" && ticketnr == "#LAGER#") {
-		fmt.Fprintln(w, `<td valign="top" align="center">`+ausgabename+`</td>`)
+		fmt.Fprintln(w, `<td valign="top" align="center">`+html.EscapeString(ausgabename)+`</td>`)
 		fmt.Fprintln(w, `<td valign="top" align="center"></td>`)
 }
 
 if ( ausgabename == "#LAGER#" && ticketnr != "#LAGER#") {
 		fmt.Fprintln(w, `<td valign="top" align="center"></td>`)
-		fmt.Fprintln(w, `<td valign="top" align="center">`+ticketnr+`</td>`)
+		fmt.Fprintln(w, `<td valign="top" align="center">`+html.EscapeString(ticketnr)+`</td>`)
 }
 
 
 if ( ausgabename != "#LAGER#" && ticketnr != "#LAGER#") {
-		fmt.Fprintln(w, `<td valign="top" align="center">`+ausgabename+`</td>`)
-		fmt.Fprintln(w, `<td valign="top" align="center">`+ticketnr+`</td>`)
+		fmt.Fprintln(w, `<td valign="top" align="center">`+html.EscapeString(ausgabename)+`</td>`)
+		fmt.Fprintln(w, `<td valign="top" align="center">`+html.EscapeString(ticketnr)+`</td>`)
 }
 
 }
@@ -870,7 +852,7 @@ if ( ausgabename != "#LAGER#" && ticketnr != "#LAGER#") {
 
 
 fmt.Fprintln(w, `
-<td valign="top" title="`+getuser(changed)+`" align="center">`+ausgabedatumb+`</td>
+<td valign="top" title="`+getuser(changed)+`" align="center">`+html.EscapeString(ausgabedatumb)+`</td>
 <td valign="top" align="center" width="183">
   
 <div style="float: left; width: 60px; ">
@@ -886,7 +868,7 @@ fmt.Fprintln(w, `
 							if checktokenstring[1] == "1" {
 								fmt.Fprintln(w, `		
 <div style="float: left; width: 60px; ">
-<form action="/user?gertyp=`+r.URL.Query().Get("gertyp")+`" method="post">
+<form action="/user?gertyp=`+r.URL.Query().Get("gertyp")+`" method="post" onSubmit="return confirm('Soll der Eintrag gelöscht werden?');">
 <input type="hidden" name="delitemid" value="`+id+`">
 <input type="submit" name="additem" id="delitem" value="löschen" style="background-color: red">
 </form> 

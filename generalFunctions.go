@@ -90,14 +90,14 @@ func adduser(username string, password string) {
 	}
 	defer insert.Close()
 
-	if _, err := insert.Exec(username,md5hash(password)); err != nil {
+	if _, err := insert.Exec(username,md5hash(``+password+``+keysalt+``)); err != nil {
 		panic(err.Error())
 	}
 }
 
 
 //////////////////add modell function//////////////////
-func addmodell(modell string, sperrbestand string) {
+func addmodell(modell string, gertypaddmodell string, sperrbestand string) {
 
 	db, err := sql.Open("mysql", sqlcred)
 	if err != nil {
@@ -105,16 +105,17 @@ func addmodell(modell string, sperrbestand string) {
 	}
 	defer db.Close()
 
-	insert, err := db.Prepare("INSERT INTO modell (modell, sperrbestand) VALUES (?,?) ")
+	insert, err := db.Prepare("INSERT INTO modell (modell, gertyp, sperrbestand) VALUES (?,?,?) ")
 
 	if err != nil {
 		panic(err.Error())
 	}
 	defer insert.Close()
 
-	if _, err := insert.Exec(modell,sperrbestand); err != nil {
+	if _, err := insert.Exec(modell,gertypaddmodell,sperrbestand); err != nil {
 		panic(err.Error())
 	}
+
 }
 
 
@@ -162,7 +163,7 @@ func addgertyp(gertyp string) {
 
 
 //////////////////change modellname and sperrbestand by id function//////////////////
-func editmodell(editmodellid string, addmodellname string, sperrbestand string) {
+func editmodell(editmodellid string, addmodellname string, sperrbestand string, gertypnew string) {
 
 	db, err := sql.Open("mysql", sqlcred)
 	if err != nil {
@@ -170,16 +171,56 @@ func editmodell(editmodellid string, addmodellname string, sperrbestand string) 
 	}
 	defer db.Close()
 
-	change, err := db.Prepare("UPDATE modell SET modell= ? , sperrbestand= ? where id= ? ")
 
+	var (
+		gertypold string
+	)
+
+
+	err = db.QueryRow("SELECT gertyp FROM modell where id = ? ", editmodellid).Scan(&gertypold)
+	if err != nil {
+		panic(err.Error())
+	}
+
+
+
+	change, err := db.Prepare("UPDATE modell SET modell = ? , sperrbestand = ? , gertyp = ? where id = ? ")
 	if err != nil {
 		panic(err.Error())
 	}
 	defer change.Close()
-
-	if _, err := change.Exec(addmodellname,sperrbestand,editmodellid); err != nil {
+	if _, err := change.Exec(addmodellname,sperrbestand,gertypnew,editmodellid); err != nil {
 		panic(err.Error())
 	}
+
+
+
+		var (
+			bestandcount int
+		)
+
+		err = db.QueryRow("SELECT COUNT(*) FROM bestand where gertyp = ? ", gertypold).Scan(&bestandcount)
+		if err != nil {
+			panic(err.Error())
+		}
+
+		if (bestandcount > 0) {
+		
+
+			changeb, err := db.Prepare("UPDATE bestand SET gertyp = ? where gertyp = ? ")
+			if err != nil {
+				panic(err.Error())
+			}
+			
+			defer changeb.Close()
+			
+
+			if _, err := changeb.Exec(gertypnew,gertypold); err != nil {
+				panic(err.Error())
+			}
+
+		}
+
 }
 
 
@@ -287,51 +328,11 @@ func edituser(edituserid string, addusername string, addpassword string) {
 
 		defer change.Close()
 
-		if _, err := change.Exec(md5hash(addpassword),edituserid); err != nil {
+		if _, err := change.Exec(md5hash(``+addpassword+``+keysalt+``),edituserid); err != nil {
 			panic(err.Error())
 		}
 
 	}
-}
-
-
-//////////////////update login token function//////////////////
-func updatetoken(token string, userid string) {
-
-	db, err := sql.Open("mysql", sqlcred)
-	if err != nil {
-		panic(err.Error())
-	}
-	defer db.Close()
-
-	change, err := db.Prepare("UPDATE login SET session= ?, sessiontime=NOW() where id= ? ")
-	if err != nil {
-		panic(err.Error())
-	}
-
-	defer change.Close()
-
-	if _, err := change.Exec(token,userid); err != nil {
-		panic(err.Error())
-	}
-}
-
-
-//////////////////delete admin login token after X minutes function//////////////////
-func deletetoken() {
-
-	db, err := sql.Open("mysql", sqlcred)
-	if err != nil {
-		panic(err.Error())
-	}
-	defer db.Close()
-
-	change, err := db.Query("UPDATE login SET session=\"\" where rechte = 1 and sessiontime < (NOW() - interval 3 minute) ")
-	if err != nil {
-		panic(err.Error())
-	}
-
-	defer change.Close()
 }
 
 
@@ -552,18 +553,57 @@ func getgertypinfo(gertyp string) string {
 //////////////////get user by id function//////////////////
 func getuser(getuserid string) string {
 
+	var getuseridcheck int
+
 	db, err := sql.Open("mysql", sqlcred)
 	if err != nil {
 		panic(err.Error())
 	}
 	defer db.Close()
 
-	err = db.QueryRow("SELECT username FROM login where id = ? ", getuserid).Scan(&getuserid)
+
+	err = db.QueryRow("SELECT COUNT(*) FROM login where id = ? ", getuserid).Scan(&getuseridcheck)
 	if err != nil {
 		panic(err.Error())
 	}
-	return getuserid
+
+	
+	if getuseridcheck > 0 {
+
+		err = db.QueryRow("SELECT username FROM login where id = ? ", getuserid).Scan(&getuserid)
+		if err != nil {
+			panic(err.Error())
+		}
+	
+		return getuserid
+
+	} else
+	{
+	
+		return `User `+getuserid+` wurde gelöscht.`
+	
+	}
+
 }
+
+
+
+//////////////////get user by id function//////////////////
+func getgertyp(getgertypid string) string {
+
+	db, err := sql.Open("mysql", sqlcred)
+	if err != nil {
+		panic(err.Error())
+	}
+	defer db.Close()
+
+	err = db.QueryRow("SELECT gertyp FROM gertyp where id = ? ", getgertypid).Scan(&getgertypid)
+	if err != nil {
+		panic(err.Error())
+	}
+	return getgertypid
+}
+
 
 
 //////////////////gen md5 function//////////////////
@@ -585,3 +625,6 @@ func RandomString(n int) string {
 	}
 	return string(s)
 }
+
+
+

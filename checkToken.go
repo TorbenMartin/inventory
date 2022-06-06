@@ -9,6 +9,46 @@ import (
 	"net"
 )
 
+
+//////////////////update login token function//////////////////
+func updatetoken(token string, userid string) {
+
+	db, err := sql.Open("mysql", sqlcred)
+	if err != nil {
+		panic(err.Error())
+	}
+	defer db.Close()
+
+	change, err := db.Prepare("UPDATE login SET session= ?, sessiontime=NOW() where id= ? ")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	defer change.Close()
+
+	if _, err := change.Exec(token,userid); err != nil {
+		panic(err.Error())
+	}
+}
+
+
+//////////////////delete admin login token after X minutes function//////////////////
+func deletetoken() {
+
+	db, err := sql.Open("mysql", sqlcred)
+	if err != nil {
+		panic(err.Error())
+	}
+	defer db.Close()
+
+	change, err := db.Query("UPDATE login SET session=\"\" where rechte = 1 and sessiontime < (NOW() - interval 3 minute) ")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	defer change.Close()
+}
+
 //////////////////checktoken function//////////////////
 func checktoken(w http.ResponseWriter, r *http.Request) string{
 

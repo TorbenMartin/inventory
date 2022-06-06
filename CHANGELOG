@@ -1,5 +1,13 @@
 CHANGELOG:
 
+Lagerverwaltung_1.0.5
+	- Fix Bugs on Search
+	- Optimize Code
+	- Add Password Salt for User Passwords
+	- Add Password Encoding in Config File 
+	- Optimize "Add Model" change Process
+	- Add/Activate Entrys PerPage Function
+
 Lagerverwaltung_1.0.4
 	- implement ssl
 

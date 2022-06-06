@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"html"
 )
 
 //////////////////admin site function//////////////////
@@ -92,14 +93,14 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 				edituser(r.FormValue("edituserid"), r.FormValue("addusername"), r.FormValue("addpassword"))
 			}
 
-			if r.FormValue("addmodell") == "Modell hinzufügen" && r.FormValue("addmodellname") != "" && r.FormValue("sperrbestand") != "" {
+			if r.FormValue("addmodell") == "Modell hinzufügen" && r.FormValue("gertypaddmodell") != "" && r.FormValue("addmodellname") != "" && r.FormValue("sperrbestand") != "" {
 				err = db.QueryRow("SELECT modell FROM modell where modell = ? ", r.FormValue("addmodellname")).Scan(&mcheck)
 				if err != nil {
-					//panic(err.Error())
+					//panic(err.Error()) 
 				}
 
 				if mcheck == "" {
-					addmodell(r.FormValue("addmodellname"), r.FormValue("sperrbestand"))
+					addmodell(r.FormValue("addmodellname"), r.FormValue("gertypaddmodell"), r.FormValue("sperrbestand"))
 				}
 			}
 
@@ -119,7 +120,7 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 					anzmodell := strconv.Itoa(delmodellcount)
 
 					fmt.Fprintln(w, `
-					<script>alert("Fehler -> Modell hat noch `+anzmodell+` Einträge!!!");</script>
+					<script>alert("Fehler -> Modell hat noch `+anzmodell+` Einträge im Bestand!!!");</script>
 				`)
 				} else {
 					delmodell(r.FormValue("delmodellid"))
@@ -143,7 +144,8 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 					delgertypcount int
 				)
 
-				err = db.QueryRow("SELECT COUNT(*) FROM zinfo where gertyp = ? ", r.FormValue("delgertypid")).Scan(&delgertypcount)
+				err = db.QueryRow("SELECT COUNT(*) FROM modell where gertyp = ? ", r.FormValue("delgertypid")).Scan(&delgertypcount)
+	
 				if err != nil {
 					//panic(err.Error())
 				}
@@ -152,10 +154,28 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 					anzgertyp := strconv.Itoa(delgertypcount)
 
 					fmt.Fprintln(w, `
-					<script>alert("Fehler -> Gerätetyp hat noch `+anzgertyp+` Einträge!!!");</script>
+					<script>alert("Fehler -> Gerätetyp hat noch `+anzgertyp+` Einträge bei Modellen!!!");</script>
 				`)
 				} else {
+				
+				err = db.QueryRow("SELECT COUNT(*) FROM zinfo where gertyp = ? ", r.FormValue("delgertypid")).Scan(&delgertypcount)
+	
+				if err != nil {
+					//panic(err.Error())
+				}
+				if delgertypcount > 0 {
+
+					anzgertyp := strconv.Itoa(delgertypcount)
+
+					fmt.Fprintln(w, `
+					<script>alert("Fehler -> Gerätetyp hat noch `+anzgertyp+` Einträge \nbei den Zusatz-Infos!!!");</script>
+				`)
+				} else {
+				
 					delgertyp(r.FormValue("delgertypid"))
+
+				}
+
 				}
 
 			}
@@ -164,8 +184,8 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 				changerechte(r.FormValue("changerechteuid"), r.FormValue("changerechterid"))
 			}
 
-			if r.FormValue("editmodell") == "Speichern" && r.FormValue("editmodellid") != "" && r.FormValue("addmodellname") != "" && r.FormValue("sperrbestand") != "" {
-				editmodell(r.FormValue("editmodellid"), r.FormValue("addmodellname"), r.FormValue("sperrbestand"))
+			if r.FormValue("editmodell") == "Speichern" && r.FormValue("editmodellid") != "" && r.FormValue("addmodellname") != "" && r.FormValue("sperrbestand") != "" && r.FormValue("gertypaddmodell") != "" {
+				editmodell(r.FormValue("editmodellid"), r.FormValue("addmodellname"), r.FormValue("sperrbestand"), r.FormValue("gertypaddmodell"))
 			}
 
 			if r.FormValue("editgertyp") == "Speichern" && r.FormValue("editgertypid") != "" && r.FormValue("addgertypname") != "" {
@@ -215,10 +235,6 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 
 		fmt.Fprintln(w, menustart)
 
-		if checktokenstring[1] == "1" {
-			fmt.Fprintln(w, `<li><a href="/user">[Userbereich]</a></li>`)
-		}
-
 		fmt.Fprintln(w, `<li><a href="/user">[Statistik]</a></li>`)
 		fmt.Fprintln(w, `<li><a href="/logout"><span style="color:red">[Logout]</span> <span id="timer" style="font-weight: bold;color:red"></span></a></li>`)
 
@@ -255,7 +271,7 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				panic(err.Error())
 			}
-			fmt.Fprintln(w, `<li><a href="/user?gertyp=`+id+`">`+gertyp+`</a></li>`)
+			fmt.Fprintln(w, `<li><a href="/user?gertyp=`+id+`">`+html.EscapeString(gertyp)+`</a></li>`)
 		}
 		err = rows.Err()
 		if err != nil {
@@ -278,10 +294,10 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		</script>
 
-		<table border="0" width="700" >
+		<table border="0" width="700" id="siteuser">
 			<tr>
 				<td>
-					<form action="/admin#siteadd" method="post">	
+					<form action="/admin#siteuser" method="post">	
 					
 		
 					<table border="0" >
@@ -292,6 +308,7 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 										<td width="70"></td>
 										<td valign="top" align="center"><p id="siteadd">Benutzer hinzufügen</p></td>
 									</tr>
+
 									<tr>
 										<td width="70">Username:</td>
 										<td>
@@ -317,13 +334,13 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 			</tr> 	
 		</table>
 		</center>
-	`)
+		`)
 
 		//list users start
 		fmt.Fprintln(w, `
 		<center>
 		<table border="0" width="700"><tr><td>
-	`)
+		`)
 
 		rows2, err := db.Query("SELECT id, username, rechte, aktiv FROM login")
 		if err != nil {
@@ -346,20 +363,20 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintln(w, `
 			<table border="0" >
 				<tr>
-					<td width="200" valign="top">`+username+`</td><td width="50" valign="top"></td>
-					<td width="195">
+					<td width="200" valign="top">`+html.EscapeString(username)+`</td><td width="50" valign="top"></td>
+					<td width="195" align="right">
 						<div style="float: left; width: 60px;">						
 							<button onclick="changeuser('`+id+`','`+username+`')">ändern</button>							
 						</div>
 						<div style="float: left; width: 60px;">						
-							<form action="/admin" method="post">
+							<form action="/admin#siteuser" method="post">
 								<input type="hidden" name="changerechteuid" value="`+id+`">
 								<input type="hidden" name="changerechterid" value="`+rechte+`">
 								<input type="submit" name="changerechte" id="changerechte" value="`+rechtemsg+`">
 							</form>
 						</div>						
 						<div style="float: left; width: 60px;">
-							<form action="/admin" method="post">
+							<form action="/admin#siteuser" method="post" onSubmit="return confirm('Soll der Eintrag gelöscht werden?');">
 								<input type="hidden" name="deluserid" value="`+id+`">
 								<input type="submit" name="deluser" id="deluser" value="löschen" style="background-color: red">
 							</form>
@@ -367,7 +384,7 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 					</td>
 				</tr>
 			</table>								
-		`)
+			`)
 
 		}
 		err = rows2.Err()
@@ -378,114 +395,8 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, `
 		</td></tr></table>
 		</center>
-	`)
-		//list users end
-
-		fmt.Fprintln(w, `<hr>`)
-
-		//list modelle start
-		fmt.Fprintln(w, `
-		<script>
-			function changemodell(id,modell,sperrbestand){
-				document.getElementById('editmodellid').value = id;
-				document.getElementById('addmodellname').value = modell;
-				document.getElementById('sperrbestand').value = sperrbestand;
-			}
-		</script>
-
-	<br><br>
-	<center>
-	<table border="0" width="700">
-		<tr>
-			<td>
-				<form action="/admin#sitemodell" method="post">	
-
-		
-				<table border="0" >
-					<tr>
-						<td >
-							<table border="0" >
-								<tr>
-									<td width="70"></td>
-									<td valign="top" align="center"><p id="sitemodell">Modell hinzufügen</p></td>
-								</tr>
-								<tr>
-									<td width="70">Modell:</td>
-									<td>
-										<input type="hidden" name="editmodellid" id="editmodellid">
-										<input type="text" name="addmodellname" id="addmodellname">
-									</td>
-								</tr>
-								<tr>
-									<td width="70">Sperrbestand:</td>
-									<td><input type="text" name="sperrbestand" id="sperrbestand" pattern="[0-9]+" value="0"></td>
-								</tr>
-								<tr>
-									<td width="70"></td>
-									<td valign="top" align="center"><input type="submit" name="addmodell" value="Modell hinzufügen"><input type="submit" name="editmodell" value="Speichern"></td>
-								</tr>
-							</table>
-						</td>
-					</tr>
-				</table>	
-				</form>
-			</td>
-		</tr> 	
-	</table>
-	</center>
-
-
-	<center>
-	<table border="0">
-		<tr>
-			<td>
-	`)
-
-		rows3, err := db.Query("SELECT id, modell, sperrbestand FROM modell")
-		if err != nil {
-			panic(err.Error())
-		}
-		defer rows3.Close()
-
-		for rows3.Next() {
-			err := rows3.Scan(&id, &modell, &sperrbestand)
-			if err != nil {
-				panic(err.Error())
-			}
-
-			fmt.Fprintln(w, `
-			<table border="0" >
-				<tr>
-					<td width="200" valign="top">`+modell+`</td><td width="50" valign="top">`+sperrbestand+`</td>
-					<td width="125">
-						<div style="float: left; width: 60px;">						
-							<button onclick="changemodell('`+id+`','`+modell+`','`+sperrbestand+`')">ändern</button>							
-						</div>							
-						<div style="float: right; width: 60px;">
-							<form action="/admin" method="post">
-								<input type="hidden" name="delmodellid" value="`+id+`">
-								<input type="submit" name="delmodell" id="delmodell" value="löschen" style="background-color: red">
-							</form>
-						</div>
-					</td>
-				</tr>
-			<table>								
 		`)
-
-		}
-		err = rows3.Err()
-		if err != nil {
-			panic(err.Error())
-		}
-
-		fmt.Fprintln(w, `
-			</td>
-		</tr>
-	</table>
-	</center>
-	`)
-
-		//list modelle end
+		//list users end
 
 		fmt.Fprintln(w, `<hr>`)
 
@@ -500,7 +411,7 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 
 	<br><br>
 	<center>
-	<table border="0" width="700">
+	<table border="0" width="700" id="sitegertyp">
 		<tr>
 			<td>
 				<form action="/admin#sitegertyp" method="post">			
@@ -535,12 +446,14 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 	</table>
 	</center>
 
-
 	<center>
-	<table border="0">
+	<table border="0" width="700">
 		<tr>
-			<td >
+			<td>
+
 	`)
+
+
 
 		rows4, err := db.Query("SELECT id, gertyp FROM gertyp")
 		if err != nil {
@@ -554,24 +467,27 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 				panic(err.Error())
 			}
 
-			fmt.Fprintln(w, `
-			<table border="0" >
+		fmt.Fprintln(w, `
+
+			<table>
 				<tr>
-					<td width="200" valign="top">`+gertyp+`</td><td width="50" valign="top"></td>
-					<td width="125">
+					<td width="315">`+html.EscapeString(gertyp)+`</td>
+					<td>
 						<div style="float: left; width: 60px;">						
 							<button onclick="changegertyp('`+id+`','`+gertyp+`')">ändern</button>							
-						</div>							
+						</div>	
 						<div style="float: right; width: 60px;">
-							<form action="/admin" method="post">
+							<form action="/admin" method="post" onSubmit="return confirm('Soll der Eintrag gelöscht werden?');">
 								<input type="hidden" name="delgertypid" value="`+id+`">
 								<input type="submit" name="delgertyp" id="delgertyp" value="löschen" style="background-color: red">
 							</form>
 						</div>
 					</td>
 				</tr>
-			<table>								
+			</table>
+		
 		`)
+
 
 		}
 		err = rows4.Err()
@@ -579,18 +495,178 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 			panic(err.Error())
 		}
 
-		fmt.Fprintln(w, `
+	fmt.Fprintln(w, `
+
 			</td>
-		</tr>
+		</tr> 	
 	</table>
 	</center>
+
+
+
 	`)
 
 		//list gertype end
+
+		//list modelle start
+
+
+		var (
+			gertypcount int
+		)
+
+		err = db.QueryRow("SELECT COUNT(*) FROM gertyp").Scan(&gertypcount)
+		if err != nil {
+			//panic(err.Error())
+		}
+
+		if (gertypcount > 0) {
+
+		fmt.Fprintln(w, `<hr>`)
+
+		fmt.Fprintln(w, `
+		<script>
+			function changemodell(id,modell,sperrbestand, gertyp){
+				document.getElementById('editmodellid').value = id;
+				document.getElementById('addmodellname').value = modell;
+				document.getElementById('sperrbestand').value = sperrbestand;
+				document.getElementById('gertypaddmodell').value = gertyp;				
+			}
+		</script>
+
+	<br><br>
+	<center>
+	<table border="0" width="700" id="sitemodell">
+		<tr>
+			<td>
+				<form action="/admin#sitemodell" method="post">	
+
+		
+				<table border="0" >
+					<tr>
+						<td >
+							<table border="0" >
+								<tr>
+									<td width="70"></td>
+									<td valign="top" align="center"><p id="sitemodell">Modell hinzufügen</p></td>
+								</tr>
+								<tr>
+									<td width="70">Gerätetyp:</td>
+									<td>
+										<select name="gertypaddmodell" id="gertypaddmodell">
+		`)
+		
+		rows7, err := db.Query("SELECT id, gertyp FROM gertyp")
+		if err != nil {
+			panic(err.Error())
+		}
+		defer rows7.Close()
+
+		for rows7.Next() {
+			err := rows7.Scan(&id, &gertyp)
+			if err != nil {
+				panic(err.Error())
+			}
+		fmt.Fprintln(w, `												
+			<option value="`+id+`">`+gertyp+`</option>
+		`)
+		}	
+
+
+		fmt.Fprintln(w, `												
+										</select>
+
+									
+									</td>
+								</tr>								
+								<tr>
+									<td width="70">Modell:</td>
+									<td>
+										<input type="hidden" name="editmodellid" id="editmodellid">
+										<input type="text" name="addmodellname" id="addmodellname">
+									</td>
+								</tr>
+								<tr>
+									<td width="70">Sperrbestand:</td>
+									<td><input type="text" name="sperrbestand" id="sperrbestand" pattern="[0-9]+" value="0"></td>
+								</tr>					
+								<tr>
+									<td width="70"></td>
+									<td valign="top" align="center"><input type="submit" name="addmodell" value="Modell hinzufügen"><input type="submit" name="editmodell" value="Speichern"></td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+				</table>	
+				</form>
+			</td>
+		</tr> 	
+	</table>
+	</center>
+
+
+	<center>
+	<table border="0" width="700">
+		<tr>
+			<td>
+		`)
+
+		rows3, err := db.Query("SELECT id, modell, sperrbestand, gertyp FROM modell")
+		if err != nil {
+			panic(err.Error())
+		}
+		defer rows3.Close()
+
+		for rows3.Next() {
+			err := rows3.Scan(&id, &modell, &sperrbestand, &gertyp)
+			if err != nil {
+				panic(err.Error())
+			}
+
+		fmt.Fprintln(w, `
+		
+		<table>
+			<tr>
+				<td width="120">`+html.EscapeString(getgertyp(gertyp))+`</td>
+				<td width="100">`+html.EscapeString(modell)+`</td>
+				<td width="95">`+html.EscapeString(sperrbestand)+`</td>
+				<td>
+				
+						<div style="float: left; width: 60px;">						
+							<button onclick="changemodell('`+id+`','`+modell+`','`+sperrbestand+`','`+gertyp+`')">ändern</button>							
+						</div>							
+						<div style="float: right; width: 60px;">
+							<form action="/admin#sitemodell" method="post" onSubmit="return confirm('Soll der Eintrag gelöscht werden?');">
+								<input type="hidden" name="delmodellid" value="`+id+`">
+								<input type="submit" name="delmodell" id="delmodell" value="löschen" style="background-color: red">
+							</form>
+						</div>
+				
+				</td>
+			</tr>
+		</table>
+		
+		`)
+
+		 }
+
+		fmt.Fprintln(w, `
+		</td>
+		</tr>
+	</table>
+	</center>
+
+		`)
+
+
+		}
+
+		//list modelle end
+
+		fmt.Fprintln(w, `<hr>`)
 		
 		//list zinfo start
 		fmt.Fprintln(w, `<br><br>`)
-
 
 		rows5, err := db.Query("SELECT id, gertyp FROM gertyp")
 		if err != nil {
@@ -604,8 +680,19 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 			panic(err.Error())
 		}
 
-		fmt.Fprintln(w, `<tr><td>`+gertyp+`: </td><td>
-		<table border="0"><tr>`)
+		fmt.Fprintln(w, `
+		<center>
+		<table border="0" width="700" id="sitefield">
+		<tr>
+			<td width="120">Gerätetyp: </td>
+			<td>`+html.EscapeString(gertyp)+`</td>
+			<form action="/admin#sitefield" method="post">
+			<td align="right"><input name="field" size="14"><input type="hidden" name="gertypid" value="`+gertypid+`" ></td>
+			<td width="235" align="center"><input type="submit" name="addfield" value="hinzufügen"></td>
+			</form>
+			
+		</tr>
+		`)
 
 
 		//dynamic fields start
@@ -620,35 +707,38 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			panic(err.Error())
 		}
-		fmt.Fprintln(w, `
-		<td><form action="/admin#sitefield" method="post">
-			<table border="1">
-				<tr><td align="center">`+zinfoname+`</td></tr>
-				<tr><td align="center">
-					<input type="hidden" name="delfieldpid" value="`+id+`">
-					<input type="submit" name="delfield" id="delfield" value="löschen" style="background-color: red">
-				</td></tr>
-			</table></form>
-		</td>`)
+
+		fmt.Fprintln(w, `		
+		<tr>
+			<form action="/admin#sitefield" method="post" onSubmit="return confirm('Soll der Eintrag gelöscht werden?');">
+			
+			<td width="120">Zusatzfeld:</td>
+			<td>`+html.EscapeString(zinfoname)+`</td>
+			<td align="right">
+			
+				<input type="hidden" name="delfieldpid" value="`+id+`">
+				<input type="submit" name="delfield" id="delfield" value="löschen" style="background-color: red">
+		
+			</td>
+
+			</form>		
+		</tr>
+		`)
+
 		}
+
 		//dynamic fields end
 
-		fmt.Fprintln(w, `
-		</tr></table>
-		</td><td>
-			<form action="/admin#sitefield" method="post">
-				<table border="0">
-					<tr><td align="center"><input name="field" size="7"><input type="hidden" name="gertypid" value="`+gertypid+`" ></td></tr>
-					<tr><td align="center"><input type="submit" name="addfield" value="hinzufügen"></td></tr>
-				</table>
-			</form>
-		</td></tr>`)
+	
+		fmt.Fprintln(w, `		
+		</table>
+		</center><br><br>
+		`)
+
 
 		}
 
-		fmt.Fprintln(w, `
-		</tr></table>
-		</center>`)	
+
 		//list zinfo end
 		
 		

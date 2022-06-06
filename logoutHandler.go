@@ -16,11 +16,12 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	formatted := fmt.Sprintf("%02d.%02d.%d", t.Day(), t.Month(), t.Year())
 	tokena := `l`+md5hash(formatted + " " + ip + " " + agent)+``
 
-         c := http.Cookie{
-                 Name:   tokena,
-                 MaxAge: -1}
-         http.SetCookie(w, &c)
-
+	c := http.Cookie{
+               Name:   tokena,
+               MaxAge: -1}
+	http.SetCookie(w, &c)
+         
+	deletetoken()
 
 	w.Header().Set("Content-Type", "text/html")
 	fmt.Fprintln(w, "<meta http-equiv=\"refresh\" content=\"0; URL=/\">")

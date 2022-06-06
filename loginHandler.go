@@ -36,7 +36,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 				fmt.Fprintln(w, "<meta http-equiv=\"refresh\" content=\"0; URL=/\">")
 			}
 
-			if ((r.FormValue("username") == username) && (md5hash(r.FormValue("password")) == password)) {
+			if ((r.FormValue("username") == username) && (md5hash(``+r.FormValue("password")+``+keysalt+``) == password)) {
 				
 
 				ip,_,_ := net.SplitHostPort(r.RemoteAddr)
