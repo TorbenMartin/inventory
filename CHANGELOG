@@ -1,8 +1,13 @@
 CHANGELOG:
 
+Lagerverwaltung_1.0.8
+	- Fix Bugs in Search Form
+	- Optimize Log Function
+
 Lagerverwaltung_1.0.7
 	- Fix Bugs in Edit Form
 	- Apply Logs
+	- Optimize User Delete Function
 
 Lagerverwaltung_1.0.6
 	- Fix Bugs in Edit Form

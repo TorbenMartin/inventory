@@ -485,16 +485,10 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 					
 					if (searchcount > 0) {
 
-					search := r.FormValue("search")
-									
-					sqlq := `SELECT DISTINCT bestand.id, bestand.gertyp, bestand.modell, bestand.seriennummer, bestand.zinfo, bestand.ausgabename, bestand.ausgabedatum, bestand.changed, bestand.ticketnr, bestand.einkaufsdatum
-						FROM bestand 
-						JOIN zinfo ON bestand.gertyp
-						JOIN zinfodata ON bestand.id
-						where zinfodata.bestandid = bestand.id and bestand.gertyp = `+mid+` and (zinfodata.daten like '%`+search+`%' or bestand.seriennummer like '%`+search+`%' or bestand.ausgabename like '%`+search+`%' or bestand.ausgabedatum like '%`+search+`%' or bestand.ticketnr like '%`+search+`%' or bestand.einkaufsdatum like '%`+search+`%') ;`
-					//fmt.Println(sqlq)
-						rows3, err := db.Query(sqlq)
-									
+						search := `%`+html.EscapeString(r.FormValue("search"))+`%`
+
+						rows3, err := db.Query("SELECT DISTINCT bestand.id, bestand.gertyp, bestand.modell, bestand.seriennummer, bestand.zinfo, bestand.ausgabename, bestand.ausgabedatum, bestand.changed, bestand.ticketnr, bestand.einkaufsdatum FROM bestand JOIN zinfo ON bestand.gertyp JOIN zinfodata ON bestand.id where zinfodata.bestandid = bestand.id and bestand.gertyp = ? and (zinfodata.daten like ? or bestand.seriennummer like ? or bestand.ausgabename like ? or bestand.ausgabedatum like ? or bestand.ticketnr like ? or bestand.einkaufsdatum like ?)",mid,search,search,search,search,search,search)
+		
 						if err != nil {
 							log.Fatal(err)
 						}
@@ -622,19 +616,14 @@ if ( ausgabename != "#LAGER#" && ticketnr != "#LAGER#") {
 	
 						} else {
 		
-					search := r.FormValue("search")
+							search := `%`+html.EscapeString(r.FormValue("search"))+`%`
+	
+							rows3, err := db.Query("SELECT DISTINCT bestand.id, bestand.gertyp, bestand.modell, bestand.seriennummer, bestand.ausgabename, bestand.ausgabedatum, bestand.changed, bestand.ticketnr, bestand.einkaufsdatum FROM bestand where bestand.gertyp = ? and (bestand.seriennummer like ? or bestand.ausgabename like ? or bestand.ausgabedatum like ? or bestand.ticketnr like ? or bestand.einkaufsdatum like ?)",mid,search,search,search,search,search)
+							if err != nil {
+								log.Fatal(err)
+							}
 
-					sqlq := `SELECT DISTINCT bestand.id, bestand.gertyp, bestand.modell, bestand.seriennummer, bestand.ausgabename, bestand.ausgabedatum, bestand.changed, bestand.ticketnr, bestand.einkaufsdatum
-						FROM bestand
-						where bestand.gertyp = `+mid+` and (bestand.seriennummer like '%`+search+`%' or bestand.ausgabename like '%`+search+`%' or bestand.ausgabedatum like '%`+search+`%' or bestand.ticketnr like '%`+search+`%' or bestand.einkaufsdatum like '%`+search+`%') ;`
-					//fmt.Println(sqlq)
-						rows3, err := db.Query(sqlq)
-						
-						if err != nil {
-							log.Fatal(err)
-						}
-
-						for rows3.Next() {
+							for rows3.Next() {
 							err := rows3.Scan(&id, &gertyp, &modell, &seriennummer, &ausgabename, &ausgabedatum, &changed, &ticketnr, &einkaufsdatum)
 							if err != nil {
 								log.Fatal(err)
