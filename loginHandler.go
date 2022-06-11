@@ -7,8 +7,48 @@ import (
 	"time"
 	"net"
 	"strconv"
-
+	"io/ioutil"
+        "encoding/json"
 )
+
+// declaring a struct
+type jDaten struct {
+	Success     bool
+	ChallengeTS string
+	Hostname    string
+	Score       float64
+	Action      string
+}
+
+
+//////////////////get recapv3 function//////////////////
+func OnPage(link string)(string) {
+
+	res, err := http.Get(link)
+	if err != nil {
+		return "0"
+	}
+	content, err := ioutil.ReadAll(res.Body)
+	res.Body.Close()
+	if err != nil {
+		return "0"
+	}
+
+	var daten jDaten
+	Data := []byte(string(content))
+	errb := json.Unmarshal(Data, &daten) 
+	if errb != nil {
+		return "0"
+	}
+
+	if (daten.Action == "login" && daten.Success == true && daten.Score > scorecap) {
+		return "1"
+	} else{
+		return "0"
+	}
+
+return "0"
+}
 
 //////////////////login function//////////////////
 func loginHandler(w http.ResponseWriter, r *http.Request) {
@@ -17,7 +57,9 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		r.ParseForm()
 
-		if r.FormValue("login") == "Login" && r.FormValue("password") != "" && r.FormValue("username") != "" {
+		var linkcap string = `https://www.google.com/recaptcha/api/siteverify?secret=`+pivcap+`&response=`+r.FormValue("recaptcha_token")+``
+
+		if (r.FormValue("login") == "Login" && r.FormValue("password") != "" && r.FormValue("username") != "" && OnPage(linkcap) == "1") {
 
 			db, err := sql.Open("mysql", sqlcred)
 			if err != nil {
@@ -72,6 +114,15 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, globalmeta)
 	fmt.Fprintln(w, `
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<script src="https://www.google.com/recaptcha/api.js?render=`+pubcap+`"></script>
+		<script>
+			grecaptcha.ready(function() {
+			grecaptcha.execute('`+pubcap+`', {action: 'login'}).then(function(token) {
+			document.getElementById('recaptcha_token').value = token;
+				});
+			});
+		</script>
 	`)
 
 	fmt.Fprintln(w, `
@@ -127,6 +178,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		<tr>
 		<td>
 		<form action="/" method="post">
+		<input type="hidden" name="recaptcha_token" id="recaptcha_token">
 		<center><div class="glass">
 		<table border="0" ><br>
     			<tr>

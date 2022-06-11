@@ -41,7 +41,7 @@ func deletetoken() {
 	}
 	defer db.Close()
 
-	change, err := db.Query("UPDATE login SET session=\"\" where rechte = 1 and sessiontime < (NOW() - interval 3 minute) ")
+	change, err := db.Query("UPDATE login SET session=\"\" where rechte = 1 and sessiontime < (NOW() - interval 10 minute) ")
 	if err != nil {
 		panic(err.Error())
 	}

@@ -3,6 +3,23 @@ package main
 //////////////////global content//////////////////
 const style = `
 <style>
+
+#logo { position: absolute; top: 10px; left: 10px;}
+
+button, input[type=button], input[type=submit], input[type=reset] {
+  background-color: gray;
+  border: none;
+  color: white;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+select[disabled=disabled], select:disabled,input[disabled=disabled], input:disabled {
+  text-decoration: line-through;
+  cursor: not-allowed;
+  color: lightgray;
+}
+
 	
 a:link {
 color: gray;
@@ -46,8 +63,8 @@ color: black;
 
 
 .navbar {
-  background-color: lightblue;
-  height: 50px;
+  background-color: #034f84;
+  height: 40px;
 }
 
 nav ul {
@@ -180,7 +197,6 @@ display: block;
 bottom: 5px;
 right:5px;
 }}
-
 </style>
 `
 
@@ -195,13 +211,14 @@ const globalmeta = `
 const menustart = `
 <div class="navbar">
   <nav>
-     <ul>
+     
 `
+
 const menuend = `
-    </ul>
+    
   </nav>
 </div>
 `
 
-var autologout string = "<meta http-equiv=\"refresh\" content=\"180; URL=/logout\">"
+var autologout string = "<meta http-equiv=\"refresh\" content=\"600; URL=/logout\">"
 

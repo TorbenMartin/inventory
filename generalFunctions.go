@@ -10,14 +10,17 @@ import (
 )
 
 
+
 //////////////////add item to bestand function//////////////////
 func sqlinsert(gertyp string, modell string, sn string, zinfo string, einkaufsdatum string, userid string) {
 	split := strings.Split(einkaufsdatum, ".")
 	newdate := ``+split[2]+`-`+split[1]+`-`+split[0]+``
-	
+
 	db, err := sql.Open("mysql", sqlcred)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
+	} else if err := db.Ping(); err != nil {
+		panic(err)
 	}
 	defer db.Close()
 
@@ -36,10 +39,11 @@ func sqlinsert(gertyp string, modell string, sn string, zinfo string, einkaufsda
 
 //////////////////zinfodatainput function//////////////////
 func zinfodatainput(zinfoid string, bestandid string, daten string) {
-
 	db, err := sql.Open("mysql", sqlcred)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
+	} else if err := db.Ping(); err != nil {
+		panic(err)
 	}
 	defer db.Close()
 
@@ -59,7 +63,9 @@ func zinfodatainput(zinfoid string, bestandid string, daten string) {
 func zinfodataedit(zinfoid string, bestandid string, daten string) {
 	db, err := sql.Open("mysql", sqlcred)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
+	} else if err := db.Ping(); err != nil {
+		panic(err)
 	}
 	defer db.Close()
 	edit, err := db.Prepare("UPDATE zinfodata SET daten= ? where bestandid= ? and zinfoid= ? ")
@@ -79,7 +85,9 @@ func adduser(username string, password string) {
 
 	db, err := sql.Open("mysql", sqlcred)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
+	} else if err := db.Ping(); err != nil {
+		panic(err)
 	}
 	defer db.Close()
 
@@ -101,7 +109,9 @@ func addmodell(modell string, gertypaddmodell string, sperrbestand string) {
 
 	db, err := sql.Open("mysql", sqlcred)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
+	} else if err := db.Ping(); err != nil {
+		panic(err)
 	}
 	defer db.Close()
 
@@ -124,7 +134,9 @@ func addfield(gertypid string, field string) {
 
 	db, err := sql.Open("mysql", sqlcred)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
+	} else if err := db.Ping(); err != nil {
+		panic(err)
 	}
 	defer db.Close()
 
@@ -145,7 +157,9 @@ func addgertyp(gertyp string) {
 
 	db, err := sql.Open("mysql", sqlcred)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
+	} else if err := db.Ping(); err != nil {
+		panic(err)
 	}
 	defer db.Close()
 
@@ -167,7 +181,9 @@ func editmodell(editmodellid string, addmodellname string, sperrbestand string, 
 
 	db, err := sql.Open("mysql", sqlcred)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
+	} else if err := db.Ping(); err != nil {
+		panic(err)
 	}
 	defer db.Close()
 
@@ -181,7 +197,7 @@ func editmodell(editmodellid string, addmodellname string, sperrbestand string, 
 	if err != nil {
 		panic(err.Error())
 	}
-
+	
 
 
 	change, err := db.Prepare("UPDATE modell SET modell = ? , sperrbestand = ? , gertyp = ? where id = ? ")
@@ -203,7 +219,8 @@ func editmodell(editmodellid string, addmodellname string, sperrbestand string, 
 		if err != nil {
 			panic(err.Error())
 		}
-
+		
+		
 		if (bestandcount > 0) {
 		
 
@@ -229,7 +246,9 @@ func editgertyp(editgertypid string, addgertypname string) {
 
 	db, err := sql.Open("mysql", sqlcred)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
+	} else if err := db.Ping(); err != nil {
+		panic(err)
 	}
 	defer db.Close()
 
@@ -254,7 +273,9 @@ func sqledit2(changeitemid string, gertyp string, ausgegebenan string, ausgegebe
 
 	db, err := sql.Open("mysql", sqlcred)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
+	} else if err := db.Ping(); err != nil {
+		panic(err)
 	}
 	defer db.Close()
 
@@ -283,7 +304,9 @@ func sqledit(modell string, changeitemid string, gertyp string, sn string, ausge
 
 	db, err := sql.Open("mysql", sqlcred)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
+	} else if err := db.Ping(); err != nil {
+		panic(err)
 	}
 	defer db.Close()
 
@@ -305,7 +328,9 @@ func edituser(edituserid string, addusername string, addpassword string) {
 
 	db, err := sql.Open("mysql", sqlcred)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
+	} else if err := db.Ping(); err != nil {
+		panic(err)
 	}
 	defer db.Close()
 
@@ -342,7 +367,9 @@ func changerechte(changerechteuid string, changerechterid string) {
 
 	db, err := sql.Open("mysql", sqlcred)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
+	} else if err := db.Ping(); err != nil {
+		panic(err)
 	}
 	defer db.Close()
 
@@ -374,7 +401,9 @@ func delitem(delitemid string) {
 
 	db, err := sql.Open("mysql", sqlcred)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
+	} else if err := db.Ping(); err != nil {
+		panic(err)
 	}
 	defer db.Close()
 
@@ -406,7 +435,9 @@ func deluser(deluserid string) {
 
 	db, err := sql.Open("mysql", sqlcred)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
+	} else if err := db.Ping(); err != nil {
+		panic(err)
 	}
 	defer db.Close()
 
@@ -428,7 +459,9 @@ func delmodell(delmodellid string) {
 
 	db, err := sql.Open("mysql", sqlcred)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
+	} else if err := db.Ping(); err != nil {
+		panic(err)
 	}
 	defer db.Close()
 
@@ -449,7 +482,9 @@ func delgertyp(delgertypid string) {
 
 	db, err := sql.Open("mysql", sqlcred)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
+	} else if err := db.Ping(); err != nil {
+		panic(err)
 	}
 	defer db.Close()
 
@@ -470,7 +505,9 @@ func delfield(delfieldpid string) {
 
 	db, err := sql.Open("mysql", sqlcred)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
+	} else if err := db.Ping(); err != nil {
+		panic(err)
 	}
 	defer db.Close()
 
@@ -491,7 +528,9 @@ func getmodinfo(modell string) string {
 
 	db, err := sql.Open("mysql", sqlcred)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
+	} else if err := db.Ping(); err != nil {
+		panic(err)
 	}
 	defer db.Close()
 
@@ -513,7 +552,9 @@ func getback(getbackid string, userid string) {
 
 	db, err := sql.Open("mysql", sqlcred)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
+	} else if err := db.Ping(); err != nil {
+		panic(err)
 	}
 	defer db.Close()
 
@@ -534,7 +575,9 @@ func getgertypinfo(gertyp string) string {
 
 	db, err := sql.Open("mysql", sqlcred)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
+	} else if err := db.Ping(); err != nil {
+		panic(err)
 	}
 	defer db.Close()
 
@@ -557,7 +600,9 @@ func getuser(getuserid string) string {
 
 	db, err := sql.Open("mysql", sqlcred)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
+	} else if err := db.Ping(); err != nil {
+		panic(err)
 	}
 	defer db.Close()
 
@@ -593,7 +638,9 @@ func getgertyp(getgertypid string) string {
 
 	db, err := sql.Open("mysql", sqlcred)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
+	} else if err := db.Ping(); err != nil {
+		panic(err)
 	}
 	defer db.Close()
 

@@ -12,6 +12,8 @@ import (
 )
 
 
+
+
 //////////////////user site function//////////////////
 func userHandler(w http.ResponseWriter, r *http.Request) {
 	
@@ -155,14 +157,14 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 		///menu1 start
 
 		fmt.Fprintln(w, menustart)
-
+		fmt.Fprintln(w, `<br>`)
 		if checktokenstring[1] == "1" {
-			fmt.Fprintln(w, `<li><a href="/admin">[Adminbereich]</a></li>`)
+			fmt.Fprintln(w, `<button onclick="window.location.href = './admin';">Adminbereich</button>`)
 		}
 
-		fmt.Fprintln(w, `<li><a href="/user">[Statistik]</a></li>`)
-		fmt.Fprintln(w, `<li><a href="/logout"><span style="color:red">[Logout]</span> <span id="timer" style="font-weight: bold;color:red"></span></a></li>`)
-
+		fmt.Fprintln(w, `<button onclick="window.location.href = './user';">Statistik</button>`)
+		fmt.Fprintln(w, `<button style="background-color: red" onclick="window.location.href = './logout';">Logout</button>&nbsp;&nbsp;`)
+//<span id="timer" style="font-weight: bold;color:red"></span>
 		fmt.Fprintln(w, menuend)
 		///menu1 end
 
@@ -202,7 +204,7 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if id != "" && gertyp != "" {
-				fmt.Fprintln(w, `<li><a href="/user?gertyp=`+id+`">`+html.EscapeString(gertyp)+`</a></li>`)
+				fmt.Fprintln(w, `<button onclick="window.location.href = './user?gertyp=`+id+`';">`+html.EscapeString(gertyp)+`</button>`)
 			}
 		}
 		err = rows.Err()
@@ -210,12 +212,11 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 			log.Fatal(err)
 		}
 
-		fmt.Fprintln(w, menuend)
+		fmt.Fprintln(w, `&nbsp;`+menuend)
 		///menu2 end
 
 		///logo start
-		fmt.Fprintln(w, `
-<br><center><img src="./img/logo.png" height="60"></center>
+		fmt.Fprintln(w, `<div id="logo"><img src="./img/logo.png" height="50"></div>
 `)
 		///logo end
 
@@ -269,7 +270,7 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 					<tr>
 						<td>Modell</td>
 						<td>
-						<select required name="modell" id="modell" width="180" style="width: 180px">
+						<select required name="modell" id="modell" style="width: 237px;text-align: right;">
 			`)
 
 				rows2, err := db.Query("SELECT id, modell FROM modell where gertyp= "+r.URL.Query().Get("gertyp")+" ")
@@ -302,7 +303,7 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 						</select>
 						</td>
 					</tr>
-					<tr><td> Seriennummer </td><td><input type="text" name="sn" id="sn"  required tabIndex="1" autofocus enabled></td></tr>`)
+					<tr><td> Seriennummer </td><td><input type="text" name="sn" id="sn"  required tabIndex="1" style="width: 237px;text-align: right;" autofocus enabled></td></tr>`)
 			
 					//loadzinfo start
 					
@@ -322,7 +323,7 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 						if (gertypid == r.URL.Query().Get("gertyp")) {
 						tabcount = (tabcount + 1) 
 						tab := strconv.Itoa(tabcount)
-							fmt.Fprintln(w, `					<tr><td> `+ zinfoname +` </td><td><input type="text" name="zinfo`+ zinfoid +`" id="zinfo`+ zinfoid +`" required tabIndex="`+tab+`"></td></tr>`)
+							fmt.Fprintln(w, `					<tr><td> `+ zinfoname +` </td><td><input type="text" name="zinfo`+ zinfoid +`" id="zinfo`+ zinfoid +`" style="width: 237px;text-align: right;" required tabIndex="`+tab+`"></td></tr>`)
 						}
 						
 					}			
@@ -333,15 +334,15 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 					
 					
 					if r.FormValue("einkaufsdatum") != "" {
-					fmt.Fprintln(w, `<tr><td> Einkaufsdatum </td><td><input type="text" name="einkaufsdatum"  id="einkaufsdatum" placeholder="DD/MM/YYYY" pattern="(?:((?:0[1-9]|1[0-9]|2[0-9])\.(?:0[1-9]|1[0-2])|(?:30)\.(?!02)(?:0[1-9]|1[0-2])|31\.(?:0[13578]|1[02]))\.(?:19|20)[0-9]{2})" value="`+r.FormValue("einkaufsdatum")+`" required></td></tr>`)					
+					fmt.Fprintln(w, `<tr><td> Einkaufsdatum </td><td><input type="text" name="einkaufsdatum"  id="einkaufsdatum" placeholder="DD/MM/YYYY" pattern="(?:((?:0[1-9]|1[0-9]|2[0-9])\.(?:0[1-9]|1[0-2])|(?:30)\.(?!02)(?:0[1-9]|1[0-2])|31\.(?:0[13578]|1[02]))\.(?:19|20)[0-9]{2})" value="`+r.FormValue("einkaufsdatum")+`" style="width: 237px;text-align: right;" required></td></tr>`)					
 					} else {
-					fmt.Fprintln(w, `					<tr><td> Einkaufsdatum </td><td><input type="text" name="einkaufsdatum"  id="einkaufsdatum" placeholder="DD/MM/YYYY" pattern="(?:((?:0[1-9]|1[0-9]|2[0-9])\.(?:0[1-9]|1[0-2])|(?:30)\.(?!02)(?:0[1-9]|1[0-2])|31\.(?:0[13578]|1[02]))\.(?:19|20)[0-9]{2})" value="`+formatted+`" required></td></tr>`)					
+					fmt.Fprintln(w, `					<tr><td> Einkaufsdatum </td><td><input type="text" name="einkaufsdatum"  id="einkaufsdatum" placeholder="DD/MM/YYYY" pattern="(?:((?:0[1-9]|1[0-9]|2[0-9])\.(?:0[1-9]|1[0-2])|(?:30)\.(?!02)(?:0[1-9]|1[0-2])|31\.(?:0[13578]|1[02]))\.(?:19|20)[0-9]{2})" value="`+formatted+`" style="width: 237px;text-align: right;" required></td></tr>`)					
 					}
 					
 					
-					fmt.Fprintln(w, `					<tr><td> ausgegeben an </td><td><input type="text" name="ausgegebenan"  id="ausgegebenan" disabled></td></tr>
-					<tr><td> Ticket Nummer </td><td><input type="text" name="ticketnr"  id="ticketnr" disabled></td></tr>
-					<tr><td> ausgegeben am </td><td><input type="text" name="ausgegebenam"  id="ausgegebenam" disabled></td></tr>
+					fmt.Fprintln(w, `					<tr><td> ausgegeben an </td><td><input type="text" name="ausgegebenan" id="ausgegebenan" style="width: 237px;text-align: right;" disabled></td></tr>
+					<tr><td> Ticket Nummer </td><td><input type="text" name="ticketnr"  id="ticketnr" style="width: 237px;text-align: right;" disabled></td></tr>
+					<tr><td> ausgegeben am </td><td><input type="text" name="ausgegebenam"  id="ausgegebenam" style="width: 237px;text-align: right;" disabled></td></tr>
 					<tr><td></td><td><input type="submit" name="additem" id="additem" value="Hinzufügen"> <input type="submit" name="additem" id="edititem" value="Speichern" disabled> <button onclick="cancel()">Abbrechen</button></td></tr>
 				</table>
 				</form>
@@ -400,8 +401,8 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintln(w, `<br><br><center><table border="0" width= "80%" ><tr align="right"><td>
 			
 			
-			<a href="./user?gertyp=`+r.URL.Query().Get("gertyp")+`&rows=`+r.URL.Query().Get("rows")+`&site=`+siteaa+`" target="_self"> [ < ] </a>
-			<a href="./user?gertyp=`+r.URL.Query().Get("gertyp")+`&rows=`+r.URL.Query().Get("rows")+`&site=`+sitebb+`" target="_self"> [ > ] </a>
+			<button onclick="window.location.href = './user?gertyp=`+r.URL.Query().Get("gertyp")+`&rows=`+r.URL.Query().Get("rows")+`&site=`+siteaa+`';"><</button>
+			<button onclick="window.location.href = './user?gertyp=`+r.URL.Query().Get("gertyp")+`&rows=`+r.URL.Query().Get("rows")+`&site=`+sitebb+`';">></button>
 			
 			<select onChange="window.open(this.value, '_self')">
 				<option value =""></option>
@@ -603,6 +604,13 @@ if ( ausgabename != "#LAGER#" && ticketnr != "#LAGER#") {
 				<input type="submit" name="additem" id="delitem" value="löschen" style="background-color: red">
 			</form> 
 		</div>`)
+							} else {
+							
+								fmt.Fprintln(w, `
+		<div style="float: left; width: 60px; ">
+				<input type="submit" name="additem" id="delitem" value="löschen" style="text-decoration: line-through;background-color: red" disabled>
+		</div>`)
+							
 							}
 							fmt.Fprintln(w, `  
 </td>
@@ -693,6 +701,11 @@ if ( ausgabename != "#LAGER#" && ticketnr != "#LAGER#") {
 				<input type="submit" name="additem" id="delitem" value="löschen" style="background-color: red">
 			</form> 
 		</div>`)
+							} else {
+								fmt.Fprintln(w, `
+		<div style="float: left; width: 60px; ">
+				<input type="submit" name="additem" id="delitem" value="löschen" style="text-decoration: line-through;background-color: red" disabled>
+		</div>`)							
 							}
 							fmt.Fprintln(w, `  
 </td>
@@ -709,7 +722,7 @@ if ( ausgabename != "#LAGER#" && ticketnr != "#LAGER#") {
 						//search end output
 										
 					} else {
-		
+
 						var (
 						limita int
 						limitb int
@@ -863,6 +876,14 @@ fmt.Fprintln(w, `
 <input type="submit" name="additem" id="delitem" value="löschen" style="background-color: red">
 </form> 
 </div>`)
+							} else {
+
+								fmt.Fprintln(w, `
+		<div style="float: left; width: 60px; ">
+				<input type="submit" name="additem" id="delitem" value="löschen" style="text-decoration: line-through;background-color: red" disabled>
+		</div>`)							
+							
+							
 							}
 
 							fmt.Fprintln(w, ` 
@@ -873,8 +894,8 @@ fmt.Fprintln(w, `
 						err = rows3.Err()
 						if err != nil {
 							log.Fatal(err)
+					
 						}
-
 					}
 					///loop bestand end
 
@@ -1048,8 +1069,14 @@ fmt.Fprintln(w, `}`)
 		}
 		///content end
 
+			
+
+
+
 		if checktokenstring[1] == "1" {
-			fmt.Fprintln(w, autologout+`
+		
+		fmt.Fprintln(w, autologout)
+			/*fmt.Fprintln(w, autologout+`
 <script>
 function Timer(s) {
  document.getElementById("timer").innerHTML=s;
@@ -1058,9 +1085,9 @@ function Timer(s) {
   window.setTimeout('Timer(' + s + ')', 999);
  }
 }
-Timer(180);
+Timer(600);
 </script>
-`)
+`)*/
 		}
 
 	}
@@ -1069,6 +1096,7 @@ Timer(180);
 
 	//stats1 start
 
+	
 	db, err := sql.Open("mysql", sqlcred)
 	if err != nil {
 		panic(err.Error())
@@ -1259,5 +1287,6 @@ fmt.Fprintln(w, `
 </div>
 `)
 
-}
 
+
+}

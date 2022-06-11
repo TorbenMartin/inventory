@@ -14,6 +14,15 @@ const keysalt string = "drfvert5z5434t54654ewqr3465wrcf5v4tbnzujrrwcrc3456zer"
 // cipher key 32 char for database password in config file
 const key string = "q-BkdGka2YpGd2,eBb=-Ab5?qhd:M-7'"
 
+// public recaptcha v3
+const pubcap string = "6Lcg9xMcAAAAAMSQKDxBZHYoaFOywPr15XXOcbeB"
+
+// private recaptcha v3
+const pivcap string = "6Lcg9xMcAAAAAKgYZ_kHksR5BhnztopbRRhv-WIx"
+
+// score recaptcha v3
+const scorecap float64 = 0.6
+
 //////////////////main process function//////////////////
 func main() {
 
@@ -34,7 +43,7 @@ func main() {
 	mux.Handle("/img/", http.StripPrefix("/img", http.FileServer(http.Dir("./img"))))
 
 	http.ListenAndServeTLS(":50000", "certs/cert.pem", "certs/privkey.pem", RequestLogger(mux))
-
+	//http.ListenAndServeTLS(":50000", "certs/cert.pem", "certs/privkey.pem", mux)
 }
 
 func secheader(w http.ResponseWriter) {
@@ -48,6 +57,7 @@ func secheader(w http.ResponseWriter) {
 	w.Header().Set("x-frame-options", "sameorigin")
 
 }
+
 
 func RequestLogger(targetMux http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

@@ -69,7 +69,7 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 					fmt.Fprintln(w, `
 					<script>alert("Fehler -> Dieses Feld hat noch `+anzfield+` Einträge!!!");</script>
 				`)
-				} else {
+				} else {	
 					delfield(r.FormValue("delfieldpid"))
 				}
 
@@ -281,9 +281,9 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 
 		fmt.Fprintln(w, menustart)
 
-		fmt.Fprintln(w, `<li><a href="/user">[Statistik]</a></li>`)
-		fmt.Fprintln(w, `<li><a href="/logout"><span style="color:red">[Logout]</span> <span id="timer" style="font-weight: bold;color:red"></span></a></li>`)
-
+		fmt.Fprintln(w, `<br><button onclick="window.location.href = './user';">Statistik</button>`)
+		fmt.Fprintln(w, `<button style="background-color: red" onclick="window.location.href = './logout';">Logout</button>&nbsp;&nbsp;`)
+//<span id="timer" style="font-weight: bold;color:red"></span>
 		fmt.Fprintln(w, menuend)
 
 		//menu1 end
@@ -317,7 +317,7 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				panic(err.Error())
 			}
-			fmt.Fprintln(w, `<li><a href="/user?gertyp=`+id+`">`+html.EscapeString(gertyp)+`</a></li>`)
+			fmt.Fprintln(w, `<button onclick="window.location.href = './user?gertyp=`+id+`';">`+html.EscapeString(gertyp)+`</button>`)
 		}
 		err = rows.Err()
 		if err != nil {
@@ -326,7 +326,7 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 
 		//loop model menu end
 
-		fmt.Fprintln(w, menuend)
+		fmt.Fprintln(w, `&nbsp;`+menuend)
 		//menu2 end
 
 		//content start
@@ -805,7 +805,9 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		fmt.Fprintln(w, "<meta http-equiv=\"refresh\" content=\"0; URL=/\">")
 	}
-	
+
+	fmt.Fprintln(w, autologout)
+	/*
 	//logout timer
 	fmt.Fprintln(w, autologout+`
 		<script>
@@ -818,5 +820,5 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		Timer(180);
 		</script>
-	`)
+	`)*/
 }
