@@ -23,6 +23,8 @@ const pivcap string = "6Lcg9xMcAAAAAKgYZ_kHksR5BhnztopbRRhv-WIx"
 // score recaptcha v3
 const scorecap float64 = 0.6
 
+//var db *sql.DB
+
 //////////////////main process function//////////////////
 func main() {
 
@@ -43,7 +45,6 @@ func main() {
 	mux.Handle("/img/", http.StripPrefix("/img", http.FileServer(http.Dir("./img"))))
 
 	http.ListenAndServeTLS(":50000", "certs/cert.pem", "certs/privkey.pem", RequestLogger(mux))
-	//http.ListenAndServeTLS(":50000", "certs/cert.pem", "certs/privkey.pem", mux)
 }
 
 func secheader(w http.ResponseWriter) {
@@ -68,13 +69,13 @@ func RequestLogger(targetMux http.Handler) http.Handler {
 		requesterIP := r.RemoteAddr
 
 		log.Printf(
-			"%s\t%s\t%s\t\t\t%s\t%s\t%s\t%s\t",
-			r.Method,
+			"%s\t\t%s\t\t%s\t\t%s\t\t",
+//			r.Method,
 			requesterIP,
-			r.Header,
-			r.TLS,
-			r.Form,
 			r.URL,
+			r.Form,
+			r.Header,
+//			r.RequestURI,
 		)
 	})
 }

@@ -7,15 +7,14 @@ import (
 	"math/rand"
 	"strings"
 	"time"
+	"io/ioutil"
+        "encoding/json"
+	"net/http"
+//	"fmt"
 )
 
-
-
 //////////////////add item to bestand function//////////////////
-func sqlinsert(gertyp string, modell string, sn string, zinfo string, einkaufsdatum string, userid string) {
-	split := strings.Split(einkaufsdatum, ".")
-	newdate := ``+split[2]+`-`+split[1]+`-`+split[0]+``
-
+func sqlinsert (gertyp string, modell string, sn string, zinfo string, einkaufsdatum string, userid string) {
 	db, err := sql.Open("mysql", sqlcred)
 	if err != nil {
 		panic(err)
@@ -24,19 +23,20 @@ func sqlinsert(gertyp string, modell string, sn string, zinfo string, einkaufsda
 	}
 	defer db.Close()
 
-	insert, err := db.Prepare("INSERT INTO bestand (gertyp, modell ,seriennummer, zinfo, ausgabename, ausgabedatum, changed, ticketnr,einkaufsdatum) VALUES (?,?,?,?,\"#LAGER#\",NOW(),?,\"#LAGER#\",?) ")
-	if err != nil {
-		panic(err.Error())
+	split := strings.Split(einkaufsdatum, ".")
+	newdate := ``+split[2]+`-`+split[1]+`-`+split[0]+``
+	
+	insert, err1 := db.Prepare("INSERT INTO bestand (gertyp, modell ,seriennummer, zinfo, ausgabename, ausgabedatum, changed, ticketnr,einkaufsdatum) VALUES (?,?,?,?,\"#LAGER#\",NOW(),?,\"#LAGER#\",?) ")
+	if err1 != nil {
+		panic(err1.Error())
 	}
 	defer insert.Close()
 	
-	if _, err := insert.Exec(gertyp, modell, sn, zinfo, userid, newdate); err != nil {
-		panic(err.Error())
+	if _, err2 := insert.Exec(gertyp, modell, sn, zinfo, userid, newdate); err2 != nil {
+		panic(err2.Error())
 	}	
 	
 }
-
-
 //////////////////zinfodatainput function//////////////////
 func zinfodatainput(zinfoid string, bestandid string, daten string) {
 	db, err := sql.Open("mysql", sqlcred)
@@ -57,8 +57,6 @@ func zinfodatainput(zinfoid string, bestandid string, daten string) {
 		panic(err.Error())
 	}
 }
-
-
 //////////////////zinfodataedit function//////////////////
 func zinfodataedit(zinfoid string, bestandid string, daten string) {
 	db, err := sql.Open("mysql", sqlcred)
@@ -68,6 +66,7 @@ func zinfodataedit(zinfoid string, bestandid string, daten string) {
 		panic(err)
 	}
 	defer db.Close()
+
 	edit, err := db.Prepare("UPDATE zinfodata SET daten= ? where bestandid= ? and zinfoid= ? ")
 	if err != nil {
 		panic(err.Error())
@@ -78,8 +77,6 @@ func zinfodataedit(zinfoid string, bestandid string, daten string) {
 		panic(err.Error())
 	}
 }
-
-
 //////////////////add user with default user permissions function//////////////////
 func adduser(username string, password string) {
 
@@ -102,8 +99,6 @@ func adduser(username string, password string) {
 		panic(err.Error())
 	}
 }
-
-
 //////////////////add modell function//////////////////
 func addmodell(modell string, gertypaddmodell string, sperrbestand string) {
 
@@ -114,7 +109,7 @@ func addmodell(modell string, gertypaddmodell string, sperrbestand string) {
 		panic(err)
 	}
 	defer db.Close()
-
+	
 	insert, err := db.Prepare("INSERT INTO modell (modell, gertyp, sperrbestand) VALUES (?,?,?) ")
 
 	if err != nil {
@@ -127,8 +122,6 @@ func addmodell(modell string, gertypaddmodell string, sperrbestand string) {
 	}
 
 }
-
-
 //////////////////add field function//////////////////
 func addfield(gertypid string, field string) {
 
@@ -141,7 +134,6 @@ func addfield(gertypid string, field string) {
 	defer db.Close()
 
 	insert, err := db.Prepare("INSERT INTO zinfo (gertyp, zinfoname) VALUES (?,?) ")
-
 	if err != nil {
 		panic(err.Error())
 	}
@@ -174,8 +166,6 @@ func addgertyp(gertyp string) {
 		panic(err.Error())
 	}
 }
-
-
 //////////////////change modellname and sperrbestand by id function//////////////////
 func editmodell(editmodellid string, addmodellname string, sperrbestand string, gertypnew string) {
 
@@ -187,19 +177,14 @@ func editmodell(editmodellid string, addmodellname string, sperrbestand string, 
 	}
 	defer db.Close()
 
-
 	var (
 		gertypold string
 	)
-
-
-	err = db.QueryRow("SELECT gertyp FROM modell where id = ? ", editmodellid).Scan(&gertypold)
-	if err != nil {
-		panic(err.Error())
+	err1 := db.QueryRow("SELECT gertyp FROM modell where id = ? ", editmodellid).Scan(&gertypold)
+	if err1 != nil {
+		panic(err1.Error())
 	}
 	
-
-
 	change, err := db.Prepare("UPDATE modell SET modell = ? , sperrbestand = ? , gertyp = ? where id = ? ")
 	if err != nil {
 		panic(err.Error())
@@ -209,15 +194,13 @@ func editmodell(editmodellid string, addmodellname string, sperrbestand string, 
 		panic(err.Error())
 	}
 
-
-
 		var (
 			bestandcount int
 		)
 
-		err = db.QueryRow("SELECT COUNT(*) FROM bestand where gertyp = ? ", gertypold).Scan(&bestandcount)
-		if err != nil {
-			panic(err.Error())
+		err2 := db.QueryRow("SELECT COUNT(*) FROM bestand where gertyp = ? ", gertypold).Scan(&bestandcount)
+		if err2 != nil {
+			panic(err2.Error())
 		}
 		
 		
@@ -239,8 +222,6 @@ func editmodell(editmodellid string, addmodellname string, sperrbestand string, 
 		}
 
 }
-
-
 //////////////////change gertypname by id function//////////////////
 func editgertyp(editgertypid string, addgertypname string) {
 
@@ -263,8 +244,6 @@ func editgertyp(editgertypid string, addgertypname string) {
 		panic(err.Error())
 	}
 }
-
-
 //////////////////with user permissions change values from bestand by id function//////////////////
 func sqledit2(changeitemid string, gertyp string, ausgegebenan string, ausgegebenam string, ticketnr string, userid string) {
 
@@ -291,8 +270,6 @@ func sqledit2(changeitemid string, gertyp string, ausgegebenan string, ausgegebe
 	}
 
 }
-
-
 //////////////////with admin permissions change values from bestand by id function//////////////////
 func sqledit(modell string, changeitemid string, gertyp string, sn string, ausgegebenan string, ausgegebenam string, ticketnr string, einkaufsdatum string, userid string) {
 
@@ -309,7 +286,7 @@ func sqledit(modell string, changeitemid string, gertyp string, sn string, ausge
 		panic(err)
 	}
 	defer db.Close()
-
+	
 	change, err := db.Prepare("UPDATE bestand SET gertyp= ?, modell= ?, seriennummer= ?, ausgabename= ? , ausgabedatum= ?, changed= ?, ticketnr= ?, einkaufsdatum= ? where id= ? ")
 
 	if err != nil {
@@ -321,8 +298,6 @@ func sqledit(modell string, changeitemid string, gertyp string, sn string, ausge
 		panic(err.Error())
 	}
 }
-
-
 //////////////////change username or password function//////////////////
 func edituser(edituserid string, addusername string, addpassword string) {
 
@@ -360,8 +335,6 @@ func edituser(edituserid string, addusername string, addpassword string) {
 
 	}
 }
-
-
 //////////////////change user permissions function//////////////////
 func changerechte(changerechteuid string, changerechterid string) {
 
@@ -394,8 +367,6 @@ func changerechte(changerechteuid string, changerechterid string) {
 		panic(err.Error())
 	}
 }
-
-
 //////////////////delete item by id function//////////////////
 func delitem(delitemid string) {
 
@@ -406,7 +377,7 @@ func delitem(delitemid string) {
 		panic(err)
 	}
 	defer db.Close()
-
+	
 	getback, err := db.Prepare("DELETE from bestand where id= ? ")
 	if err != nil {
 		panic(err.Error())
@@ -428,8 +399,6 @@ func delitem(delitemid string) {
 	}
 	
 }
-
-
 //////////////////delete user by id function//////////////////
 func deluser(deluserid string) {
 
@@ -452,8 +421,6 @@ func deluser(deluserid string) {
 		panic(err.Error())
 	}
 }
-
-
 //////////////////delete modell by id function//////////////////
 func delmodell(delmodellid string) {
 
@@ -475,8 +442,6 @@ func delmodell(delmodellid string) {
 		panic(err.Error())
 	}
 }
-
-
 //////////////////delete gertyp by id function//////////////////
 func delgertyp(delgertypid string) {
 
@@ -498,8 +463,6 @@ func delgertyp(delgertypid string) {
 		panic(err.Error())
 	}
 }
-
-
 //////////////////delete delfield by id function//////////////////
 func delfield(delfieldpid string) {
 
@@ -521,8 +484,6 @@ func delfield(delfieldpid string) {
 		panic(err.Error())
 	}
 }
-
-
 //////////////////get model name by id function//////////////////
 func getmodinfo(modell string) string {
 
@@ -538,15 +499,13 @@ func getmodinfo(modell string) string {
 		modellb string
 	)
 
-	err = db.QueryRow("SELECT modell FROM modell where id = ? ", modell).Scan(&modellb)
-	if err != nil {
-		panic(err.Error())
+	err1 := db.QueryRow("SELECT modell FROM modell where id = ? ", modell).Scan(&modellb)
+	if err1 != nil {
+		panic(err1.Error())
 	}
 
 	return modellb
 }
-
-
 //////////////////get item back by id function//////////////////
 func getback(getbackid string, userid string) {
 
@@ -568,8 +527,6 @@ func getback(getbackid string, userid string) {
 		panic(err.Error())
 	}
 }
-
-
 //////////////////get gertypname by id function//////////////////
 func getgertypinfo(gertyp string) string {
 
@@ -585,14 +542,12 @@ func getgertypinfo(gertyp string) string {
 		gertypname string
 	)
 
-	err = db.QueryRow("SELECT gertyp FROM gertyp where id = ? ", gertyp).Scan(&gertypname)
-	if err != nil {
-		panic(err.Error())
+	err1 := db.QueryRow("SELECT gertyp FROM gertyp where id = ? ", gertyp).Scan(&gertypname)
+	if err1 != nil {
+		panic(err1.Error())
 	}
 	return gertypname
 }
-
-
 //////////////////get user by id function//////////////////
 func getuser(getuserid string) string {
 
@@ -606,18 +561,17 @@ func getuser(getuserid string) string {
 	}
 	defer db.Close()
 
-
-	err = db.QueryRow("SELECT COUNT(*) FROM login where id = ? ", getuserid).Scan(&getuseridcheck)
-	if err != nil {
-		panic(err.Error())
+	err1 := db.QueryRow("SELECT COUNT(*) FROM login where id = ? ", getuserid).Scan(&getuseridcheck)
+	if err1 != nil {
+		panic(err1.Error())
 	}
 
 	
 	if getuseridcheck > 0 {
 
-		err = db.QueryRow("SELECT username FROM login where id = ? ", getuserid).Scan(&getuserid)
-		if err != nil {
-			panic(err.Error())
+		err2 := db.QueryRow("SELECT username FROM login where id = ? ", getuserid).Scan(&getuserid)
+		if err2 != nil {
+			panic(err2.Error())
 		}
 	
 		return getuserid
@@ -631,11 +585,8 @@ func getuser(getuserid string) string {
 
 }
 
-
-
 //////////////////get user by id function//////////////////
 func getgertyp(getgertypid string) string {
-
 	db, err := sql.Open("mysql", sqlcred)
 	if err != nil {
 		panic(err)
@@ -644,14 +595,12 @@ func getgertyp(getgertypid string) string {
 	}
 	defer db.Close()
 
-	err = db.QueryRow("SELECT gertyp FROM gertyp where id = ? ", getgertypid).Scan(&getgertypid)
-	if err != nil {
-		panic(err.Error())
+	err1 := db.QueryRow("SELECT gertyp FROM gertyp where id = ? ", getgertypid).Scan(&getgertypid)
+	if err1 != nil {
+		panic(err1.Error())
 	}
 	return getgertypid
 }
-
-
 
 //////////////////gen md5 function//////////////////
 func md5hash(text string) string {
@@ -659,8 +608,6 @@ func md5hash(text string) string {
 	hasher.Write([]byte(text))
 	return hex.EncodeToString(hasher.Sum(nil))
 }
-
-
 //////////////////random string function//////////////////
 func RandomString(n int) string {
 	rand.Seed(time.Now().UnixNano())
@@ -674,4 +621,46 @@ func RandomString(n int) string {
 }
 
 
+//////////////////struct recapv3//////////////////
+type jDaten struct {
+	Success     bool
+	ChallengeTS string
+	Hostname    string
+	Score       float64
+	Action      string
+}
 
+
+//////////////////get recapv3 function//////////////////
+func OnPage(id string, aktion string)(string) {
+
+	var link string = `https://www.google.com/recaptcha/api/siteverify?secret=`+pivcap+`&response=`+id+``
+
+	res, err := http.Get(link)
+	if err != nil {
+		panic(err.Error())
+	}
+	content, err := ioutil.ReadAll(res.Body)
+	res.Body.Close()
+	if err != nil {
+		panic(err.Error())
+	}
+
+	var daten jDaten
+	Data := []byte(string(content))
+	errb := json.Unmarshal(Data, &daten) 
+	if errb != nil {
+		panic(err.Error())
+	}
+	
+	var output string = "0"
+	
+	if (daten.Action == aktion && daten.Success == true && daten.Score > scorecap) {
+		output = "1"	
+	}
+	
+//	fmt.Println(link)
+//	fmt.Println(daten)
+//	fmt.Println(output)	
+	return output
+}

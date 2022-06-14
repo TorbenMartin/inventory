@@ -11,15 +11,11 @@ import (
 	"html"
 )
 
-
-
-
 //////////////////user site function//////////////////
 func userHandler(w http.ResponseWriter, r *http.Request) {
 	
 	secheader(w)
 	w.Header().Set("Content-Type", "text/html")
-
 
 	deletetoken()
 
@@ -36,7 +32,7 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 		///post start
 		if r.Method == "POST" {
 			r.ParseForm()
-
+			
 			if (r.FormValue("additem") == "Hinzufügen" && r.FormValue("sn") != "" && r.FormValue("modell") != "" && r.FormValue("einkaufsdatum")!="") {
 			
 				var (
@@ -44,7 +40,6 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 					zinfoid    string
 					bestandid    string
 				)
-
 
 				err = db.QueryRow("SELECT COUNT(*) FROM bestand where seriennummer = ? ", r.FormValue("sn")).Scan(&sncount)
 				if err != nil {
@@ -79,7 +74,6 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 					//loadzinfo1 end
 					
 
-
 				} else {
 					fmt.Fprintln(w, `
 				<script>alert("Fehler -> Gerät schon vorhanden!!!");</script>
@@ -89,6 +83,7 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 
 			if checktokenstring[1] == "1" {
 				if (r.FormValue("additem") == "Speichern" && r.FormValue("sn") != "" && r.FormValue("changeitemid") != "" && r.FormValue("ausgegebenan") != "" && r.FormValue("ausgegebenam") != "" && r.FormValue("ticketnr") != "" && r.FormValue("einkaufsdatum")!="" && r.FormValue("modell") != "") {
+				if (OnPage(r.FormValue("recaptcha_change"), "change") == "1") {
 					sqledit(r.FormValue("modell"), r.FormValue("changeitemid"), r.URL.Query().Get("gertyp"), r.FormValue("sn"), r.FormValue("ausgegebenan"), r.FormValue("ausgegebenam"), r.FormValue("ticketnr"), r.FormValue("einkaufsdatum"),checktokenstring[0])	
 				
 					var (
@@ -124,26 +119,29 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 					//loadzinfo1 end				
 				
 		
-				}
+				}}
+				
 			} else {
 				if (r.FormValue("additem") == "Speichern" && r.FormValue("changeitemid") != "" && r.FormValue("ausgegebenan") != "" && r.FormValue("ausgegebenam") != "" && r.FormValue("ticketnr") != "") {
+				if (OnPage(r.FormValue("recaptcha_change"), "change") == "1") {
 					sqledit2(r.FormValue("changeitemid"), r.URL.Query().Get("gertyp"), r.FormValue("ausgegebenan"), r.FormValue("ausgegebenam"), r.FormValue("ticketnr"),checktokenstring[0])
-				}
+				}}
 			}
 
-			if r.FormValue("additem") == "zurück" && r.FormValue("getbackid") != "" {
+			if (r.FormValue("additem") == "zurück" && r.FormValue("getbackid") != "") {	
+			if (OnPage(r.FormValue(`recaptcha_getback`+r.FormValue("getbackid")+``), "getback") == "1") {
 				getback(r.FormValue("getbackid"),checktokenstring[0])
-			}
+			}}
 
 			if checktokenstring[1] == "1" {
-				if r.FormValue("additem") == "löschen" && r.FormValue("delitemid") != "" {
+				if (r.FormValue("additem") == "löschen" && r.FormValue("delitemid") != "") {
+
 						delitem(r.FormValue("delitemid"))		
 				}
 			}
 
 		}
 		///post end
-
 
 	if r.URL.Query().Get("txt") != "1" {
 		fmt.Fprintln(w, globalmeta)
@@ -152,7 +150,6 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, style)
 		///style end
 	}
-
 
 		///menu1 start
 
@@ -232,12 +229,32 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 
 				///search start
 				if r.URL.Query().Get("gertyp") != "" {
+
+
+
 					fmt.Fprintln(w, `
 		<br><br>
 		<table width="95%">
 			<tr width="100%" align="right">
 				<td>
-					<form action="/user?gertyp=`+r.URL.Query().Get("gertyp")+`" method="post">
+
+					<form action="/user?gertyp=`+r.URL.Query().Get("gertyp")+`" method="post">`)
+					
+					fmt.Fprintln(w, `
+						<script src="https://www.google.com/recaptcha/api.js?render=`+pubcap+`"></script>
+						<script>
+							grecaptcha.ready(function() {
+							grecaptcha.execute('`+pubcap+`', {action: 'search'}).then(function(token) {
+							document.getElementById('recaptcha_search').value = token;
+								});
+							});
+					
+						</script>				
+
+						<input type="hidden" name="recaptcha_search" id="recaptcha_search">
+					`)
+					
+					fmt.Fprintln(w, `
 						<input required type="text" size="21" name="search" placeholder="YYYY-MM-DD oder Suchwort" value="">
 						<input type="submit" name="searchitem" id="searchitem" value="suchen" style="background-color: lightblue">
 					</form>
@@ -247,7 +264,6 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 	`)
 				}
 				///search end
-
 
 
 
@@ -263,8 +279,23 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 				fmt.Fprintln(w, `			
 				<center>
 
+				<form action="/user?gertyp=`+r.URL.Query().Get("gertyp")+`" method="post">`)
+				
+					fmt.Fprintln(w, `
+						<script src="https://www.google.com/recaptcha/api.js?render=`+pubcap+`"></script>
+						<script>
+							grecaptcha.ready(function() {
+							grecaptcha.execute('`+pubcap+`', {action: 'change'}).then(function(token) {
+							document.getElementById('recaptcha_change').value = token;
+								});
+							});
+					
+						</script>				
 
-				<form action="/user?gertyp=`+r.URL.Query().Get("gertyp")+`" method="post">
+						<input type="hidden" name="recaptcha_change" id="recaptcha_change">
+					`)
+				
+				fmt.Fprintln(w, `
 				<input type="hidden" name="changeitemid" id="changeitemid" value="">
 				<table>
 					<tr>
@@ -356,7 +387,6 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 </details>
 	</center>
 	`)
-
 
 				if (r.FormValue("additem") == "Hinzufügen") || (r.FormValue("changeitemid") != "") {
 					fmt.Fprintln(w, `
@@ -477,9 +507,8 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 					///loop bestand start
 
 					//search start output
-					
-					if r.FormValue("searchitem") == "suchen" && r.FormValue("search") != "" {
-					
+					if (r.FormValue("searchitem") == "suchen" && r.FormValue("search") != "") {
+					if (OnPage(r.FormValue("recaptcha_search"), "search") == "1") {
 					var searchcount int
 					mid := r.URL.Query().Get("gertyp")
 					err = db.QueryRow("SELECT COUNT(*) FROM zinfo where gertyp = ? ", mid).Scan(&searchcount)
@@ -508,7 +537,6 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 	`)
 
 ///zinfo table start
-
 
 					var changezinfo []string
 					var vorhanden int = 0
@@ -548,7 +576,6 @@ func userHandler(w http.ResponseWriter, r *http.Request) {
 									
 		//loadzinfo end
 
-
 	split := strings.Split(einkaufsdatum, "-")
 	einkaufsdatumb := ``+split[2]+`.`+split[1]+`.`+split[0]+``
 	
@@ -575,7 +602,6 @@ if ( ausgabename == "#LAGER#" && ticketnr != "#LAGER#") {
 		fmt.Fprintln(w, `<td valign="top" align="center">`+html.EscapeString(ticketnr)+`</td>`)
 }
 
-
 if ( ausgabename != "#LAGER#" && ticketnr != "#LAGER#") {
 		fmt.Fprintln(w, `<td valign="top" align="center">`+html.EscapeString(ausgabename)+`</td>`)
 		fmt.Fprintln(w, `<td valign="top" align="center">`+html.EscapeString(ticketnr)+`</td>`)
@@ -590,7 +616,25 @@ if ( ausgabename != "#LAGER#" && ticketnr != "#LAGER#") {
 			<button onclick="changeitem('`+id+`','`+modell+`','`+seriennummer+`','`+zinfo+`','`+ausgabename+`','`+ausgabedatumb+`','`+changed+`','`+ticketnr+`','`+einkaufsdatumb+`'`+strings.Join(changezinfo, "")+`)">ändern</button>
 		</div>
 		<div style="float: left; width: 60px; ">
-			<form action="/user?gertyp=`+r.URL.Query().Get("gertyp")+`" method="post">
+			<form action="/user?gertyp=`+r.URL.Query().Get("gertyp")+`" method="post">`)
+			
+		fmt.Fprintln(w, `
+
+		<script src="https://www.google.com/recaptcha/api.js?render=`+pubcap+`"></script>
+		<script>
+			grecaptcha.ready(function() {
+			grecaptcha.execute('`+pubcap+`', {action: 'getback'}).then(function(token) {
+			document.getElementById('recaptcha_getback`+id+`').value = token;
+				});
+			});
+							
+		</script>				
+		<input type="hidden" name="recaptcha_getback`+id+`" id="recaptcha_getback`+id+`">
+		`)			
+			
+			
+			
+		fmt.Fprintln(w, `
 				<input type="hidden" name="getbackid" value="`+id+`">
 				<input type="submit" name="additem" id="backitem" value="zurück">
 			</form> 										
@@ -600,6 +644,13 @@ if ( ausgabename != "#LAGER#" && ticketnr != "#LAGER#") {
 								fmt.Fprintln(w, `
 		<div style="float: left; width: 60px; ">
 			<form action="/user?gertyp=`+r.URL.Query().Get("gertyp")+`" method="post" onSubmit="return confirm('Soll der Eintrag gelöscht werden?');">
+`)
+			
+			
+			
+			
+			
+		fmt.Fprintln(w, `
 				<input type="hidden" name="delitemid" value="`+id+`">
 				<input type="submit" name="additem" id="delitem" value="löschen" style="background-color: red">
 			</form> 
@@ -650,7 +701,6 @@ if ( ausgabename != "#LAGER#" && ticketnr != "#LAGER#") {
 	splitb := strings.Split(ausgabedatum, "-")
 	ausgabedatumb := ``+splitb[2]+`.`+splitb[1]+`.`+splitb[0]+``
 
-
 							fmt.Fprintln(w, `
 		<td valign="top" align="center">`+html.EscapeString(einkaufsdatumb)+`</td>`)
 
@@ -671,7 +721,6 @@ if ( ausgabename == "#LAGER#" && ticketnr != "#LAGER#") {
 		fmt.Fprintln(w, `<td valign="top" align="center">`+html.EscapeString(ticketnr)+`</td>`)
 }
 
-
 if ( ausgabename != "#LAGER#" && ticketnr != "#LAGER#") {
 		fmt.Fprintln(w, `<td valign="top" align="center">`+html.EscapeString(ausgabename)+`</td>`)
 		fmt.Fprintln(w, `<td valign="top" align="center">`+html.EscapeString(ticketnr)+`</td>`)
@@ -688,6 +737,27 @@ if ( ausgabename != "#LAGER#" && ticketnr != "#LAGER#") {
 		</div>
 		<div style="float: left; width: 60px; ">
 			<form action="/user?gertyp=`+r.URL.Query().Get("gertyp")+`" method="post">
+
+`)
+			
+		fmt.Fprintln(w, `
+
+		<script src="https://www.google.com/recaptcha/api.js?render=`+pubcap+`"></script>
+		<script>
+			grecaptcha.ready(function() {
+			grecaptcha.execute('`+pubcap+`', {action: 'getback'}).then(function(token) {
+			document.getElementById('recaptcha_getback`+id+`').value = token;
+				});
+			});
+							
+		</script>				
+		<input type="hidden" name="recaptcha_getback`+id+`" id="recaptcha_getback`+id+`">
+		`)			
+			
+			
+			
+		fmt.Fprintln(w, `
+
 				<input type="hidden" name="getbackid" value="`+id+`">
 				<input type="submit" name="additem" id="backitem" value="zurück">
 			</form> 										
@@ -697,6 +767,13 @@ if ( ausgabename != "#LAGER#" && ticketnr != "#LAGER#") {
 								fmt.Fprintln(w, `
 		<div style="float: left; width: 60px; ">
 			<form action="/user?gertyp=`+r.URL.Query().Get("gertyp")+`" method="post" onSubmit="return confirm('Soll der Eintrag gelöscht werden?');">
+
+`)
+			
+		
+			
+		fmt.Fprintln(w, `
+
 				<input type="hidden" name="delitemid" value="`+id+`">
 				<input type="submit" name="additem" id="delitem" value="löschen" style="background-color: red">
 			</form> 
@@ -721,7 +798,7 @@ if ( ausgabename != "#LAGER#" && ticketnr != "#LAGER#") {
 										
 						//search end output
 										
-					} else {
+					}} else {
 
 						var (
 						limita int
@@ -745,7 +822,6 @@ if ( ausgabename != "#LAGER#" && ticketnr != "#LAGER#") {
 						limitc = limita * limitb
 						limitd = strconv.Itoa(limitc)
 
-
 						if r.URL.Query().Get("rows") == "*" {
 						
 						var bestandcount int
@@ -758,7 +834,6 @@ if ( ausgabename != "#LAGER#" && ticketnr != "#LAGER#") {
 						limitd = strconv.Itoa(0)
 						perpageb = strconv.Itoa(bestandcount)
 						}
-
 
 						rows3, err := db.Query("SELECT id, gertyp, modell, seriennummer, zinfo, ausgabename, ausgabedatum, changed, ticketnr, einkaufsdatum FROM bestand where gertyp = ? LIMIT ?,? ", mid, limitd, perpageb)
 						if err != nil {
@@ -826,7 +901,6 @@ if ( ausgabename != "#LAGER#" && ticketnr != "#LAGER#") {
 							fmt.Fprintln(w, `
 <td valign="top" align="center">`+html.EscapeString(einkaufsdatumb)+`</td>`)
 
-
 if ( ausgabename == "#LAGER#" && ticketnr == "#LAGER#") {
 	
 		fmt.Fprintln(w, `<td valign="top" align="center">`+html.EscapeString(ausgabename)+`</td>`)
@@ -844,14 +918,12 @@ if ( ausgabename == "#LAGER#" && ticketnr != "#LAGER#") {
 		fmt.Fprintln(w, `<td valign="top" align="center">`+html.EscapeString(ticketnr)+`</td>`)
 }
 
-
 if ( ausgabename != "#LAGER#" && ticketnr != "#LAGER#") {
 		fmt.Fprintln(w, `<td valign="top" align="center">`+html.EscapeString(ausgabename)+`</td>`)
 		fmt.Fprintln(w, `<td valign="top" align="center">`+html.EscapeString(ticketnr)+`</td>`)
 }
 
 }
-
 
 
 fmt.Fprintln(w, `
@@ -863,6 +935,27 @@ fmt.Fprintln(w, `
 </div>
 <div style="float: left; width: 60px; ">
 <form action="/user?gertyp=`+r.URL.Query().Get("gertyp")+`" method="post">
+
+`)
+			
+		fmt.Fprintln(w, `
+
+		<script src="https://www.google.com/recaptcha/api.js?render=`+pubcap+`"></script>
+		<script>
+			grecaptcha.ready(function() {
+			grecaptcha.execute('`+pubcap+`', {action: 'getback'}).then(function(token) {
+			document.getElementById('recaptcha_getback`+id+`').value = token;
+				});
+			});
+							
+		</script>				
+		<input type="hidden" name="recaptcha_getback`+id+`" id="recaptcha_getback`+id+`">
+		`)			
+			
+			
+			
+		fmt.Fprintln(w, `
+
 <input type="hidden" name="getbackid" value="`+id+`">
 <input type="submit" name="additem" id="backitem" value="zurück">
 </form> 										
@@ -872,6 +965,14 @@ fmt.Fprintln(w, `
 								fmt.Fprintln(w, `		
 <div style="float: left; width: 60px; ">
 <form action="/user?gertyp=`+r.URL.Query().Get("gertyp")+`" method="post" onSubmit="return confirm('Soll der Eintrag gelöscht werden?');">
+
+`)
+			
+			
+			
+			
+		fmt.Fprintln(w, `
+
 <input type="hidden" name="delitemid" value="`+id+`">
 <input type="submit" name="additem" id="delitem" value="löschen" style="background-color: red">
 </form> 
@@ -910,6 +1011,9 @@ fmt.Fprintln(w, `
 
 				///load javascript start
 				fmt.Fprintln(w, `
+				
+				
+				
 <script>
 // HTML-Tabelle sortieren
 const table = document.getElementById("foobar-table");
@@ -967,7 +1071,6 @@ const sortColumn = function(index) {
 });
 `)
 
-
 fmt.Fprintln(w, `
 
 //<![CDATA[
@@ -1022,7 +1125,6 @@ document.getElementById('addmen').open = false;
 }
 
 
-
 function changeitem(id,modellid,seriennummer,zinfo,ausgegebenan,ausgegebenam,changed,ticketnr,einkaufsdatum`+strings.Join(changeheader, "")+`){
 document.getElementById('modell').namedItem('modellid' + modellid).selected=true;
 document.getElementById('changeitemid').value = id;
@@ -1033,7 +1135,6 @@ document.getElementById('sn').value = seriennummer;
 for indexb := range changeheaderb {
 fmt.Fprintln(w, `document.getElementById('`+changeheaderb[indexb]+`').value = `+changeheaderb[indexb]+`;`)																							
 }
-
 
 fmt.Fprintln(w, `
 document.getElementById('ticketnr').value = ticketnr;
@@ -1047,7 +1148,6 @@ document.getElementById('ticketnr').disabled = this.checked;
 document.getElementById('addmen').open = true;
 `)
 
-
 				if checktokenstring[1] != "1" {
 					fmt.Fprintln(w, `
 document.getElementById('modell').disabled = !this.checked;
@@ -1055,7 +1155,6 @@ document.getElementById('sn').disabled = !this.checked;
 document.getElementById('einkaufsdatum').disabled = !this.checked;
 `)
 				}
-
 
 
 fmt.Fprintln(w, `}`)
@@ -1070,7 +1169,6 @@ fmt.Fprintln(w, `}`)
 		///content end
 
 			
-
 
 
 		if checktokenstring[1] == "1" {
@@ -1200,7 +1298,6 @@ Timer(600);
 
 		if r.URL.Query().Get("txt") != "1" {
 
-
 			fmt.Fprintln(w, `<br><center><table>`)
 		}
 
@@ -1255,7 +1352,6 @@ Timer(600);
 			fmt.Fprintln(w, `</table></center>`)
 
 
-
 		}
 
 	}
@@ -1286,7 +1382,5 @@ fmt.Fprintln(w, `
    </a>
 </div>
 `)
-
-
 
 }
