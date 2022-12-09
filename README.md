@@ -4,7 +4,9 @@ a small IT inventory management system as a opensource project.
 
 
 -----------------------------------------------------------------
+(0) download program:
 
+	- git clone https://github.com/TorbenMartin/inventory.git
 
 
 (1) download the mysql driver:
@@ -16,11 +18,12 @@ a small IT inventory management system as a opensource project.
 (2) config file example "conf.json":
 
 	{
-	   "User": ["username"],
- 	   "Password": ["password"],
+	    "User": ["username"],
+	    "Password": ["p@ssw0rd"],
  	   "Server": ["localhost"],
- 	   "Port": ["3306"],
-	   "Db": ["lager"]
+	    "Port": ["3306"],
+	    "Db": ["lager"],
+	    "Init": ["1"]
 	}
 
 
@@ -36,12 +39,20 @@ a small IT inventory management system as a opensource project.
 		mysqldump -u root -p -x -B lager > lager.sql
 
 
-(4) compile:
+(4) ssl certificates:
+	
+	- certbot certonly --standalone --preferred-challenges http -d FQDN
+	- cp /etc/letsencrypt/live/FQDN/cert.pem inventory/certs/
+	- cp /etc/letsencrypt/live/FQDN/privkey.pem inventory/certs/
+	- chown USERNAME:USERNAME inventory/certs/*pem
+	
+	
+(5) compile:
 
 	- for linux: go build -o lager *.go
 	- for windows: GOOS=windows GOARCH=amd64 go build -o lager.exe *.go
 
-(5) normal run:
+(6) normal run:
 
 	- run source: go run *.go
 	
@@ -53,8 +64,9 @@ a small IT inventory management system as a opensource project.
 		just click it with your fkn mouse
 
 	- open webbrowser on http://localhost:50000
+	- login with: admin:admin
 
-(6) run as a linux service:
+(7) run as a linux service:
 	
 	cp lager /home/username
 	chmod +x /home/username
@@ -88,4 +100,3 @@ a small IT inventory management system as a opensource project.
 	systemctl status lager
 	systemctl start lager
 	systemctl status lager
-
