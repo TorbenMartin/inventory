@@ -41,6 +41,7 @@ a small IT inventory management system as a opensource project.
 
 (4) ssl certificates:
 	
+	- mkdir -p inventory/certs
 	- certbot certonly --standalone --preferred-challenges http -d FQDN
 	- cp /etc/letsencrypt/live/FQDN/cert.pem inventory/certs/
 	- cp /etc/letsencrypt/live/FQDN/privkey.pem inventory/certs/
