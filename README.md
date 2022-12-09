@@ -9,7 +9,8 @@ a small IT inventory management system as a opensource project.
 
 (1) download the mysql driver:
 
-	- go get github.com/go-sql-driver/mysql
+	- go mod init test
+	- go mod tidy
 
 
 (2) config file example "conf.json":
